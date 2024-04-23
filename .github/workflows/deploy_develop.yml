@@ -15,12 +15,12 @@ jobs:
       - name: 🔑Loading ssh private key...
         run: |
           mkdir -p .ssh && chmod 700 .ssh
-          echo "$SSH_KEY" > .ssh/id_rsa && chmod 600 .ssh/id_rsa
+          echo "$SSH_KEY" > .ssh/google_compute_engine && chmod 600 .ssh/google_compute_engine
         env:
           SSH_KEY: ${{ secrets.SSH_PRIVATEKEY }}
       - name: 🚀Deploy!!
         run: |
-          ssh -t -t -o "StrictHostKeyChecking=no" -i .ssh/id_rsa $HOST "
+          ssh -t -t -o "StrictHostKeyChecking=no" -i .ssh/google_compute_engine $HOST "
             cd $QUAINT_REPO_PATH
             git checkout develop
             git pull
