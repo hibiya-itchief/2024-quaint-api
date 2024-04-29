@@ -1,32 +1,32 @@
-name: developブランチの内容をもとに検証環境APIをデプロイ
+#name: developブランチの内容をもとに検証環境APIをデプロイ
 
-on:
-  push:
-    branches:
-      - develop
-  workflow_dispatch:
-jobs:
-  ssh:
-    runs-on: ubuntu-latest
-    environment:
-      name: "検証環境API"
-      url: https://api-dev.seiryofes.com/docs
-    steps:
-      - name: 🔑Loading ssh private key...
-        run: |
-          mkdir -p .ssh && chmod 700 .ssh
-          echo "$SSH_KEY" > .ssh/google_compute_engine && chmod 600 .ssh/google_compute_engine
-        env:
-          SSH_KEY: ${{ secrets.SSH_PRIVATEKEY }}
-      - name: 🚀Deploy!!
-        run: |
-          ssh -t -t -o "StrictHostKeyChecking=no" -i .ssh/google_compute_engine $HOST "
-            cd $QUAINT_REPO_PATH
-            git checkout develop
-            git pull
-            docker-compose down
-            docker-compose -f docker-compose-dev.yml up -d --build
-          "
-        env:
-          HOST: ${{ secrets.SSH_HOST }}
-          QUAINT_REPO_PATH: ${{ secrets.QUAINT_REPO_PATH }}
+#on:
+#  push:
+#    branches:
+#      - develop
+#  workflow_dispatch:
+#jobs:
+#  ssh:
+#    runs-on: ubuntu-latest
+#    environment:
+#      name: "検証環境API"
+#      url: https://api-dev.seiryofes.com/docs
+#    steps:
+#      - name: 🔑Loading ssh private key...
+#        run: |
+#          mkdir -p .ssh && chmod 700 .ssh
+#          echo "$SSH_KEY" > .ssh/google_compute_engine && chmod 600 .ssh/google_compute_engine
+#        env:
+#          SSH_KEY: ${{ secrets.SSH_PRIVATEKEY }}
+#      - name: 🚀Deploy!!
+#        run: |
+#          ssh -t -t -o "StrictHostKeyChecking=no" -i .ssh/google_compute_engine $HOST "
+#            cd $QUAINT_REPO_PATH
+#            git checkout develop
+#            git pull
+#            docker-compose down
+#            docker-compose -f docker-compose-dev.yml up -d --build
+#          "
+#        env:
+#          HOST: ${{ secrets.SSH_HOST }}
+#          QUAINT_REPO_PATH: ${{ secrets.QUAINT_REPO_PATH }}
