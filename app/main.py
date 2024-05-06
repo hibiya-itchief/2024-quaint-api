@@ -1,5 +1,6 @@
 import json
 import time
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Union
 from xml.dom.minidom import Entity
@@ -169,8 +170,19 @@ def delete_ownership(user_oid:str,group_id:str,permission=Depends(auth.admin),db
 def create_group(groups:List[schemas.GroupCreate],permission:schemas.JWTUser=Depends(auth.admin),db:Session=Depends(db.get_db)):
     result=[]
     for group in groups:
+        # idが命名規則に従っているかを確認する
+        type:schemas.GroupType = group.type
+        #　クラス劇である時
+        if(type == schemas.GroupType.play):
+            if not re.fullmatch(pattern=r'[1-3][1-8]r', string=group.id):
+                raise HTTPException(400, '団体のタイプがplayである場合のidの命名規則に違反しています。命名規則:[1-3][1-8]r')
+        else:
+            if re.fullmatch(pattern=r'[1-3][1-8]r', string=group.id):
+                raise HTTPException(400, '団体のidがクラス劇のidと重複する可能性があります。クラス劇のidの命名規則から外れた値に変更してください。')
+
         result.append(crud.create_group(db,group))
     return result
+
 @app.get(
     "/groups",
     response_model=List[schemas.Group],
