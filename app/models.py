@@ -71,6 +71,8 @@ class Group(Base):
     floor = Column(VARCHAR(255)) #何階か
     place = Column(VARCHAR(255)) #どこか
 
+    type = Column(VARCHAR(255)) # クラス劇・Hebe・部活かなどの情報。この情報をもとにフロントが各団体を判別していく
+
     def update_dict(self,dict):
         print(dict)
         for name, value in dict.items():
