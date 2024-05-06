@@ -25,10 +25,11 @@ class UserRole(str,Enum):
     school_parents="school_parents"
 
 class GroupType(str, Enum):
-    play="play"
-    hebe="hebe"
-    club="club"
-    other="other"
+    play="play" #　劇：クラスを想定
+    hebe="hebe" # Hebe
+    club="club" # 部活動
+    test="test" # テスト用団体。全ての機能を利用可能。
+    other="other" # その他
 
 
 class EventBase(BaseModel):
