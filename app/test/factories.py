@@ -138,6 +138,7 @@ group1 = schemas.GroupCreate(
     private_page_content_url="<html><h1>プライベート</h1></html>",
     floor=1,
     place="社会科教室",
+    type=schemas.GroupType.play
 )
 
 group2 = schemas.GroupCreate(
@@ -154,6 +155,7 @@ group2 = schemas.GroupCreate(
     private_page_content_url="<html><h1>プライベート</h1></html>",
     floor=2,
     place="生徒ホール",
+    type=schemas.GroupType.play
 )
 
 group1_update = schemas.GroupUpdate(
@@ -170,6 +172,7 @@ group1_update = schemas.GroupUpdate(
     private_page_content_url="<html><h1>プライベート</h1></html>",
     floor=3,
     place="生徒ホール",
+    type=schemas.GroupType.play
 )
 
 group_tag_create1 = schemas.GroupTagCreate(
