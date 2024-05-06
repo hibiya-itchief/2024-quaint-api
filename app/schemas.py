@@ -83,12 +83,12 @@ class GroupUpdate(BaseModel):
     private_page_content_url:Union[str,None] = Query(default=None,max_length=200)
     floor:Union[int,None] = Query(default=None) #何階か
     place:Union[str,None] = Query(default=None, max_length=200) #場所
+    type:GroupType # クラス劇・Hebe・部活動などの情報
     
 class GroupBase(GroupUpdate):#userdefined idをURLにする。groupnameは表示名
     id:str=Query(regex="^[a-zA-Z0-9_\-.]{3,16}$",min_length=3,max_length=16)
     groupname:str = Query(max_length=200)
     enable_vote:bool = True
-    type:GroupType # クラス劇・Hebe・部活動などの情報
 
 class GroupCreate(GroupBase):
     class Config:
