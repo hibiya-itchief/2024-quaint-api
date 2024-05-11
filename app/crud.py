@@ -384,7 +384,7 @@ def set_hebe_upnext(db:Session,hebe:schemas.HebeResponse):
     db.refresh(db_hebe)
     return db_hebe
 
-#受け取ったpandas.DataFrameをserializeする
+#受け取ったpandas.DataFrameを変換する
 #受け取った値についての検証はcolumnsだけ行う
 def convert_df(df:pd.DataFrame) -> pd.DataFrame:
     #カラムの数が正しいかの検証
@@ -393,10 +393,10 @@ def convert_df(df:pd.DataFrame) -> pd.DataFrame:
 
     converted_df = pd.DataFrame(columns=['group_id', 'eventname', 'lottery', 'target', 'ticket_stock', 'starts_at', 'ends_at', 'sell_starts', 'sell_ends'])
 
-    #1行ずつ取り出してserializeする
+    #1行ずつ取り出して変換する
     for i in range(len(df)):
         try:
-            #時間の情報をserializeする
+            #時間の情報を変換する
             year = str(df.iat[i, 5])
             month = str(df.iat[i, 6])
             day = str(df.iat[i, 7])
@@ -408,7 +408,7 @@ def convert_df(df:pd.DataFrame) -> pd.DataFrame:
             }
 
             """
-            month, day, hourのserialize
+            month, day, hourの表現を変換する
             上の三つを時間にくっつける上で 9 → 09 みたいにする必要がある
             """
             if len(month) == 1:
