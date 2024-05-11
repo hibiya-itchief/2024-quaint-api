@@ -125,3 +125,8 @@ class News(Base):
     timestamp = Column(VARCHAR(255), nullable=False)
     author = Column(VARCHAR(255), nullable=False)
     detail = Column(VARCHAR(255), nullable=True)
+
+    def update_dict(self,dict):
+        for name, value in dict.items():
+            if name in self.__dict__ :
+                setattr(self, name, value)

@@ -756,11 +756,48 @@ def set_hebe_nowplaying(hebe:schemas.HebeResponse,permission:schemas.JWTUser=Dep
 def set_hebe_upnext(hebe:schemas.HebeResponse,permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)):
     return crud.set_hebe_upnext(db,hebe)
 
+@app.get(
+    "/news",
+    response_model=List[schemas.NewsBase],
+    summary="全てのお知らせ情報を取得する",
+    tags=["news"]
+)
+def get_all_news(db:Session = Depends(db.get_db)):
+    return crud.get_all_news(db)
+
+@app.get(
+    "/news/{news_id}",
+    summary="指定されたidのnewsを取得",
+    response_model=schemas.NewsBase,
+    tags=["news"]
+)
+def get_news(news_id:str, db:Session = Depends(db.get_db)):
+    return crud.get_news(db, news_id)
+
 @app.post(
     "/news/create",
-    response_model=schemas.NewsCreate,
+    response_model=schemas.NewsUpdate,
     summary="お知らせ情報の作成",
-    tags=["chief"]
+    tags=["news","chief","admin"]
 )
-def create_news(news:schemas.NewsCreate, db:Session = Depends(db.get_db)): # permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)
+def create_news(news:schemas.NewsUpdate,permission_chief:schemas.JWTUser=Depends(auth.chief),permission_admin:schemas.JWTUser=Depends(auth.admin), db:Session = Depends(db.get_db)):
     return crud.create_news(db, news)
+
+@app.delete(
+    "/news/{news_id}",
+    response_model=schemas.NewsBase,
+    summary="お知らせ情報の削除",
+    tags=["news","chief","admin"]
+)
+def delete_news(news_id:str, permission_chief:schemas.JWTUser=Depends(auth.chief),permission_admin:schemas.JWTUser=Depends(auth.admin), db:Session = Depends(db.get_db)):
+    return crud.delete_news(db, news_id)
+
+@app.put(
+    "/news/{news_id}",
+    summary="お知らせ情報の更新",
+    response_model=schemas.NewsUpdate,
+    description="タイムスタンプとIDは変更されません。注意してください。",
+    tags=["news","chief","admin"]
+)
+def change_news(news_id:str, news:schemas.NewsUpdate, permission_chief:schemas.JWTUser=Depends(auth.chief),permission_admin:schemas.JWTUser=Depends(auth.admin), db:Session = Depends(db.get_db)):
+    return crud.update_news(db, news_id, news)

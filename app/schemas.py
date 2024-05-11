@@ -180,7 +180,7 @@ class GroupLink(GroupLinkBase):
     class Config:
         orm_mode=True
 
-class NewsCreate(BaseModel):
+class NewsUpdate(BaseModel):
     title:str = Query(default=None,max_length=200)
     author:str = Query(default=None, max_length=50)
     detail:Union[str, None] = Query(default=None)
@@ -188,7 +188,7 @@ class NewsCreate(BaseModel):
     class Config:
         orm_mode=True 
 
-class NewsBase(NewsCreate):
+class NewsBase(NewsUpdate):
     timestamp:datetime
     id:str
 

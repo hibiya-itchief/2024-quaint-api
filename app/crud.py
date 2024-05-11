@@ -506,11 +506,39 @@ def create_events_from_df(db:Session, df: pd.DataFrame) -> None:
 
     return None
 
-def create_news(db:Session, news:schemas.NewsCreate):
+def get_all_news(db:Session):
+    return db.query(models.News).all()
+
+def get_news(db:Session, news_id:str):
+    news = db.query(models.News).filter(models.News.id==news_id).first()
+
+    if not news:
+        raise HTTPException(404, "指定されたidを持つnewsは存在しません。")
+
+    return news
+
+def create_news(db:Session, news:schemas.NewsUpdate):
     db_news = models.News(**news.dict())
-    db_news.timestamp = datetime.now(timezone(timedelta(hours=9))).isoformat()
+    db_news.timestamp = datetime.now(timezone(timedelta(hours=9))).isoformat() #日本の時刻に修正。時間はstring型で保存
     db_news.id = ulid.new()
     db.add(db_news)
+    db.commit()
+    db.refresh(db_news)
+    return db_news
+
+def delete_news(db:Session, news_id:str):
+    news = db.query(models.News).filter(models.News.id==news_id).first()
+    if not news:
+        raise HTTPException(404, "指定されたidを持つお知らせは存在しません。")
+    db.delete(news)
+    db.commit()
+    return news
+
+def update_news(db:Session, news_id:str, news:schemas.NewsUpdate):
+    db_news:models.News = db.query(models.News).filter(models.News.id == news_id).first()
+    if not db_news:
+        raise HTTPException(404, "指定されたidを持つnewsは存在しません。")
+    db_news.update_dict(news.dict())
     db.commit()
     db.refresh(db_news)
     return db_news
