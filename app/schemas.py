@@ -180,6 +180,19 @@ class GroupLink(GroupLinkBase):
     class Config:
         orm_mode=True
 
+class NewsCreate(BaseModel):
+    title:str = Query(default=None,max_length=200)
+    author:str = Query(default=None, max_length=50)
+    detail:Union[str, None] = Query(default=None)
+
+    class Config:
+        orm_mode=True 
+
+class NewsBase(NewsCreate):
+    timestamp:datetime
+    id:str
+
+
 Event.update_forward_refs()
 Group.update_forward_refs()
 Tag.update_forward_refs()

@@ -117,3 +117,11 @@ class HebeUpnext(Base):
     
     group_id = Column(VARCHAR(255),ForeignKey("groups.id"),primary_key=True,index=True)
 
+class News(Base):
+    __tablename__ = "news"
+
+    id = Column(VARCHAR(255), primary_key=True, unique=True)
+    title = Column(VARCHAR(255), nullable=False)
+    timestamp = Column(VARCHAR(255), nullable=False)
+    author = Column(VARCHAR(255), nullable=False)
+    detail = Column(VARCHAR(255), nullable=True)

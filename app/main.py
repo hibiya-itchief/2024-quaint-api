@@ -690,6 +690,26 @@ def update_frontend(permission:schemas.JWTUser=Depends(auth.admin)):
     else:
         HTTPException(res.status_code,"Cloudflareへのデプロイに失敗しました")
 
+@app.post(
+    "/support/events",
+    summary="公演の一括追加",
+    tags=["admin"],
+    description="csvファイルを元に公演を一斉に追加します。csvファイルについてはサンプルのエクセルと同じ書式で書いたものにしてください。正しく処理されません。"
+)
+async def create_all_events_from_csv(file: UploadFile = File(...), permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)):
+    #pandasのDataFrameに読み込んだファイルを変換
+    content = file.file.read()
+    string_data = str(content, 'utf-8')
+    data = StringIO(string_data)
+    df = pd.read_csv(data)
+    data.close()
+    file.file.close()
+
+    converted_df = crud.convert_df(df)
+    crud.check_df(db,converted_df)
+    crud.create_events_from_df(db, converted_df)
+
+    return {'message' :[converted_df.iloc[i,:].to_json() for i in range(len(converted_df))]}
 
 @app.get(
     "/hebe/nowplaying",
@@ -723,7 +743,7 @@ def get_hebe_upnext(db:Session = Depends(db.get_db)):
     tags=["chief"],
     description="チーフのみ"
 )
-def get_hebe_nowplaying(hebe:schemas.HebeResponse,permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)):
+def set_hebe_nowplaying(hebe:schemas.HebeResponse,permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)):
     return crud.set_hebe_nowplaying(db,hebe)
 
 @app.post(
@@ -733,26 +753,14 @@ def get_hebe_nowplaying(hebe:schemas.HebeResponse,permission:schemas.JWTUser=Dep
     tags=["chief"],
     description="チーフのみ"
 )
-def get_hebe_nowplaying(hebe:schemas.HebeResponse,permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)):
+def set_hebe_upnext(hebe:schemas.HebeResponse,permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)):
     return crud.set_hebe_upnext(db,hebe)
 
 @app.post(
-    "/support/events",
-    summary="公演の一括追加",
-    tags=["admin"],
-    description="csvファイルを元に公演を一斉に追加します。csvファイルについてはサンプルのエクセルと同じ書式で書いたものにしてください。正しく処理されません。"
+    "/news/create",
+    response_model=schemas.NewsCreate,
+    summary="お知らせ情報の作成",
+    tags=["chief"]
 )
-async def create_all_events_from_csv(file: UploadFile = File(...), permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)):
-    #pandasのDataFrameに読み込んだファイルを変換
-    content = file.file.read()
-    string_data = str(content, 'utf-8')
-    data = StringIO(string_data)
-    df = pd.read_csv(data)
-    data.close()
-    file.file.close()
-
-    converted_df = crud.convert_df(df)
-    crud.check_df(db,converted_df)
-    crud.create_events_from_df(db, converted_df)
-
-    return {'message' :[converted_df.iloc[i,:].to_json() for i in range(len(converted_df))]}
+def create_news(news:schemas.NewsCreate, db:Session = Depends(db.get_db)): # permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)
+    return crud.create_news(db, news)

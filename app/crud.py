@@ -505,3 +505,12 @@ def create_events_from_df(db:Session, df: pd.DataFrame) -> None:
         db.refresh(db_event)
 
     return None
+
+def create_news(db:Session, news:schemas.NewsCreate):
+    db_news = models.News(**news.dict())
+    db_news.timestamp = datetime.now(timezone(timedelta(hours=9))).isoformat()
+    db_news.id = ulid.new()
+    db.add(db_news)
+    db.commit()
+    db.refresh(db_news)
+    return db_news
