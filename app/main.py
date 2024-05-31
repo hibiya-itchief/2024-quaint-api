@@ -690,6 +690,26 @@ def update_frontend(permission:schemas.JWTUser=Depends(auth.admin)):
     else:
         HTTPException(res.status_code,"Cloudflareへのデプロイに失敗しました")
 
+@app.post(
+    "/support/events",
+    summary="公演の一括追加",
+    tags=["admin"],
+    description="csvファイルを元に公演を一斉に追加します。csvファイルについてはサンプルのエクセルと同じ書式で書いたものにしてください。正しく処理されません。"
+)
+async def create_all_events_from_csv(file: UploadFile = File(...), permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)):
+    #pandasのDataFrameに読み込んだファイルを変換
+    content = file.file.read()
+    string_data = str(content, 'utf-8')
+    data = StringIO(string_data)
+    df = pd.read_csv(data)
+    data.close()
+    file.file.close()
+
+    converted_df = crud.convert_df(df)
+    crud.check_df(db,converted_df)
+    crud.create_events_from_df(db, converted_df)
+
+    return {'message' :[converted_df.iloc[i,:].to_json() for i in range(len(converted_df))]}
 
 @app.get(
     "/hebe/nowplaying",
@@ -723,7 +743,7 @@ def get_hebe_upnext(db:Session = Depends(db.get_db)):
     tags=["chief"],
     description="チーフのみ"
 )
-def get_hebe_nowplaying(hebe:schemas.HebeResponse,permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)):
+def set_hebe_nowplaying(hebe:schemas.HebeResponse,permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)):
     return crud.set_hebe_nowplaying(db,hebe)
 
 @app.post(
@@ -733,26 +753,51 @@ def get_hebe_nowplaying(hebe:schemas.HebeResponse,permission:schemas.JWTUser=Dep
     tags=["chief"],
     description="チーフのみ"
 )
-def get_hebe_nowplaying(hebe:schemas.HebeResponse,permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)):
+def set_hebe_upnext(hebe:schemas.HebeResponse,permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)):
     return crud.set_hebe_upnext(db,hebe)
 
-@app.post(
-    "/support/events",
-    summary="公演の一括追加",
-    tags=["admin"],
-    description="csvファイルを元に公演を一斉に追加します。csvファイルについてはサンプルのエクセルと同じ書式で書いたものにしてください。正しく処理されません。"
+@app.get(
+    "/news",
+    response_model=List[schemas.NewsBase],
+    summary="全てのお知らせ情報を取得する",
+    tags=["news"]
 )
-async def create_all_events_from_csv(file: UploadFile = File(...), permission:schemas.JWTUser=Depends(auth.chief),db:Session = Depends(db.get_db)):
-    #pandasのDataFrameに読み込んだファイルを変換
-    content = file.file.read()
-    string_data = str(content, 'utf-8')
-    data = StringIO(string_data)
-    df = pd.read_csv(data)
-    data.close()
-    file.file.close()
+def get_all_news(db:Session = Depends(db.get_db)):
+    return crud.get_all_news(db)
 
-    converted_df = crud.convert_df(df)
-    crud.check_df(db,converted_df)
-    crud.create_events_from_df(db, converted_df)
+@app.get(
+    "/news/{news_id}",
+    summary="指定されたidのnewsを取得",
+    response_model=schemas.NewsBase,
+    tags=["news"]
+)
+def get_news(news_id:str, db:Session = Depends(db.get_db)):
+    return crud.get_news(db, news_id)
 
-    return {'message' :[converted_df.iloc[i,:].to_json() for i in range(len(converted_df))]}
+@app.post(
+    "/news/create",
+    response_model=schemas.NewsUpdate,
+    summary="お知らせ情報の作成",
+    tags=["news","chief","admin"]
+)
+def create_news(news:schemas.NewsUpdate,permission_chief:schemas.JWTUser=Depends(auth.chief),permission_admin:schemas.JWTUser=Depends(auth.admin), db:Session = Depends(db.get_db)):
+    return crud.create_news(db, news)
+
+@app.delete(
+    "/news/{news_id}",
+    response_model=schemas.NewsBase,
+    summary="お知らせ情報の削除",
+    tags=["news","chief","admin"]
+)
+def delete_news(news_id:str, permission_chief:schemas.JWTUser=Depends(auth.chief),permission_admin:schemas.JWTUser=Depends(auth.admin), db:Session = Depends(db.get_db)):
+    return crud.delete_news(db, news_id)
+
+@app.put(
+    "/news/{news_id}",
+    summary="お知らせ情報の更新",
+    response_model=schemas.NewsUpdate,
+    description="タイムスタンプとIDは変更されません。注意してください。",
+    tags=["news","chief","admin"]
+)
+def change_news(news_id:str, news:schemas.NewsUpdate, permission_chief:schemas.JWTUser=Depends(auth.chief),permission_admin:schemas.JWTUser=Depends(auth.admin), db:Session = Depends(db.get_db)):
+    return crud.update_news(db, news_id, news)
