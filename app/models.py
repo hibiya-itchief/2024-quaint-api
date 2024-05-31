@@ -124,7 +124,7 @@ class News(Base):
     title = Column(VARCHAR(255), nullable=False)
     timestamp = Column(VARCHAR(255), nullable=False)
     author = Column(VARCHAR(255), nullable=False)
-    detail = Column(VARCHAR(255), nullable=True)
+    detail = Column(VARCHAR(500), nullable=True)
 
     def update_dict(self,dict):
         for name, value in dict.items():
