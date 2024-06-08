@@ -24,6 +24,13 @@ class UserRole(str,Enum):
     visited_school="visited_school"
     school_parents="school_parents"
 
+class GroupType(str, Enum):
+    play="play" #　劇：クラスを想定
+    hebe="hebe" # Hebe
+    club="club" # 部活動
+    test="test" # テスト用団体。全ての機能を利用可能。
+    other="other" # その他
+
 
 class EventBase(BaseModel):
     eventname:str
@@ -76,11 +83,13 @@ class GroupUpdate(BaseModel):
     private_page_content_url:Union[str,None] = Query(default=None,max_length=200)
     floor:Union[int,None] = Query(default=None) #何階か
     place:Union[str,None] = Query(default=None, max_length=200) #場所
+    type:GroupType # クラス劇・Hebe・部活動などの情報
+    
 class GroupBase(GroupUpdate):#userdefined idをURLにする。groupnameは表示名
     id:str=Query(regex="^[a-zA-Z0-9_\-.]{3,16}$",min_length=3,max_length=16)
     groupname:str = Query(max_length=200)
     enable_vote:bool = True
-    
+
 class GroupCreate(GroupBase):
     class Config:
         orm_mode=True
@@ -170,6 +179,19 @@ class GroupLink(GroupLinkBase):
     id:str#ULID
     class Config:
         orm_mode=True
+
+class NewsUpdate(BaseModel):
+    title:str = Query(default=None,max_length=200)
+    author:str = Query(default=None, max_length=50)
+    detail:Union[str, None] = Query(default=None)
+
+    class Config:
+        orm_mode=True 
+
+class NewsBase(NewsUpdate):
+    timestamp:datetime
+    id:str
+
 
 Event.update_forward_refs()
 Group.update_forward_refs()

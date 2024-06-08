@@ -138,6 +138,7 @@ group1 = schemas.GroupCreate(
     private_page_content_url="<html><h1>プライベート</h1></html>",
     floor=1,
     place="社会科教室",
+    type=schemas.GroupType.play
 )
 
 group2 = schemas.GroupCreate(
@@ -154,7 +155,28 @@ group2 = schemas.GroupCreate(
     private_page_content_url="<html><h1>プライベート</h1></html>",
     floor=2,
     place="生徒ホール",
+    type=schemas.GroupType.play
 )
+
+# 変数
+group3 = schemas.GroupCreate(
+    id="test_1",
+    groupname="テストグループ",
+    title="TEST_TEST",
+    description="TESTです",
+    enable_vote=True,
+    twitter_url=None,
+    instagram_url=None,
+    stream_url=None,
+    public_thumbnail_image_url=None,
+    public_page_content_url="<html><h1>宣伝ページ</h1></html>",
+    private_page_content_url="<html><h1>プライベート</h1></html>",
+    floor=4,
+    place="LL教室",
+    type=schemas.GroupType.test
+)
+
+
 
 group1_update = schemas.GroupUpdate(
     id="28r",
@@ -170,6 +192,7 @@ group1_update = schemas.GroupUpdate(
     private_page_content_url="<html><h1>プライベート</h1></html>",
     floor=3,
     place="生徒ホール",
+    type=schemas.GroupType.play
 )
 
 group_tag_create1 = schemas.GroupTagCreate(
