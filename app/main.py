@@ -428,13 +428,23 @@ def delete_events(group_id:str,event_id:str,user:schemas.JWTUser=Depends(auth.ad
 
 ### Ticket CRUD
 @app.post(
-    "/spectest/tickets",
+    "/spectest/groups/{group_id}/events/{event_id}/tickets",
     response_model=schemas.Ticket,
+    description="ツールを用いた負荷テスト用のエンドポイントです。同じ時間帯の公演を取っているか、同じ公演を取っているかの確認をしないので、一つのアカウントで複数のチケットを取ることができます。大量のチケットを実際に作成するので削除しやすいgroupとeventを指定することを推奨します。",
     summary="整理券取得の負荷テスト",)
-def spectest_ticket(user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
+def spectest_ticket(group_id:str, event_id:str,user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
+    event = crud.get_event(db,event_id)
+    if not event:
+        raise HTTPException(404,"指定されたGroupまたはEventが見つかりません")
     if not auth.check_school(user):
         raise HTTPException(HTTP_403_FORBIDDEN)
-    return crud.spectest_ticket(db,user)
+
+    if crud.count_tickets_for_event(db,event)+1<=event.ticket_stock:
+        res = crud.spectest_ticket(group_id,event_id,db,user)
+    else:
+        raise HTTPException(404, "already max")
+    
+    return res
 
 @app.post(
     "/groups/{group_id}/events/{event_id}/tickets",
