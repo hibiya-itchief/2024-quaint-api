@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 from starlette.status import (HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN,
                               HTTP_404_NOT_FOUND)
 
-from app import auth, crud, db, models, schemas, storage
+from app import auth, crud, db, models, schemas, blob_storage
 from app.config import settings
 from app.ga import ga_screenpageview
 from app.msgraph import MsGraph
@@ -230,7 +230,7 @@ def update_group(group_id:str,updated_group:schemas.GroupUpdate,user:schemas.JWT
     if not(auth.check_admin(user) or crud.check_owner_of(db,user,group.id)):
         raise HTTPException(401,"Adminまたは当該GroupのOwnerの権限が必要です")
     if not updated_group.public_thumbnail_image_url and group.public_thumbnail_image_url: # サムネイル画像を削除する場合
-        storage.delete_image_public(group.public_thumbnail_image_url)
+        blob_storage.delete_image(group.public_thumbnail_image_url)
     u=crud.update_group(db,group,updated_group)
     return u
 
@@ -249,9 +249,9 @@ def upload_thumbnail_image(group_id:str,file:Union[bytes,None] = File(default=No
     if not(auth.check_admin(user) or crud.check_owner_of(db,user,group.id)):
         raise HTTPException(401,"Adminまたは当該GroupのOwnerの権限が必要です")
     if group.public_thumbnail_image_url: #既にサムネイル画像がある場合は削除
-            storage.delete_image_public(group.public_thumbnail_image_url)
+            blob_storage.delete_image(group.public_thumbnail_image_url)
     if file:
-        image_url = storage.upload_to_oos_public(file)
+        image_url = blob_storage.upload_to_blob_public(file)
         return crud.change_public_thumbnail_image_url(db,group,image_url)
     else:
         return crud.change_public_thumbnail_image_url(db,group,None)
