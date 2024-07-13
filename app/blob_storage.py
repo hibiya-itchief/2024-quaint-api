@@ -71,7 +71,6 @@ def upload_to_blob_public(binary:bytes) -> str:
         # Upload the blob data - default blob type is BlockBlob
         blob_client.upload_blob(im_io.getvalue(), blob_type="BlockBlob")
     except:
-        print("blob関連ですよ")
         raise HTTPException(500,"Internal Server Error")
     
     file_url = f"https://quaintstorage.blob.core.windows.net/{settings.container_name}/{filename}"
@@ -80,9 +79,7 @@ def upload_to_blob_public(binary:bytes) -> str:
 def delete_image(image_url:str) -> None:
     try:
         file_name = re.findall(f'https://quaintstorage.blob.core.windows.net/{settings.container_name}/(.*)',image_url)
-        print(file_name)
         blob_client = blob_service_client.get_blob_client(container=settings.container_name, blob=file_name[0])
         blob_client.delete_blob()
     except:
-        print("delete時のエラー")
         raise HTTPException(500,"Internal Server Error")
