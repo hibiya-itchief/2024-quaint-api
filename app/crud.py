@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, join
 from sqlalchemy.sql import func
 
-from app import auth, models, schemas, storage
+from app import auth, models, schemas, blob_storage
 from app.config import params, settings
 
 

@@ -19,7 +19,6 @@ python-dotenv
 ulid-py
 pytest-cov
 python-multipart
-boto3
 pillow
 bcrypt
 PyJWT[crypt]
@@ -29,3 +28,5 @@ google-api-python-client
 google-analytics-data
 oauth2client
 pandas
+azure-storage-blob
+azure-identity
