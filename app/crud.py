@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, join
 from sqlalchemy.sql import func
 
-from app import auth, models, schemas, storage
+from app import auth, models, schemas, blob_storage
 from app.config import params, settings
 
 
@@ -263,8 +263,8 @@ def create_ticket(db:Session,event:schemas.Event,user:schemas.JWTUser,person:int
     db.commit()
     db.refresh(db_ticket)
     return db_ticket
-def spectest_ticket(db:Session,user:schemas.JWTUser):
-    db_ticket = models.Ticket(id=ulid.new().str,group_id="testgroup",event_id="01H9PTVFH7CS30A5RKBKMAQ82R",owner_id=user.name,person=1,status="cancelled",created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
+def spectest_ticket(group_id:str, event_id:str ,db:Session,user:schemas.JWTUser):
+    db_ticket = models.Ticket(id=ulid.new().str,group_id=group_id,event_id=event_id,owner_id=user.name,person=1,status="active",created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
     db.add(db_ticket)
     db.commit()
     db.refresh(db_ticket)

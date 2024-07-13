@@ -20,11 +20,9 @@ class Settings(BaseSettings):
     jwt_privatekey:str=os.getenv('JWT_PRIVATEKEY')
     jwt_publickey:str="-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0i+BMxUUgG6slPW/9oHP\nUrYpoLX08NNTsFpEwAkpBHxzbauFc2SmFaFnmkkco8lfCQs66sj6fwtTtSc4RH+Z\nncFRaxV5M+AS7utyGhS9iNAg6u5DaGAxbMm1NAqUkuNLGS+pVx+p75b681inCBBu\nVxpPF0eCNMsUfMPDBKKKS6ABuIpl4Ep3BDXLCSfciBFixDA6poIDy7tryfcpglyw\nuq84ROrOBLU3kTaTM4zl8x2VRkGGdU88+7WhpVgB7s7uSJmzmWtojvDGp+1tylqp\nB4geNVB8rjqkZQjr9Y0oI2sJuIAYzDaBWwQsVUMmp2JO64kR8P1P7i99graUaGOd\nJwIDAQAB\n-----END PUBLIC KEY-----"
 
-    #Oracle Object Storage
-    region_name:str=os.getenv('REGION_NAME',"")
-    aws_secret_access_key:str=os.getenv('AWS_SECRET_ACCESS_KEY',"")
-    aws_access_key_id:str=os.getenv('AWS_ACCESS_KEY_ID',"")
-    endpoint_url:str=os.getenv('ENDPOINT_URL',"")
+    # Azure Blob Storage
+    connect_str:str = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
+    container_name:str = os.getenv('AZURE_BLOB_STORAGE_CONTAINER_NAME')
 
     # Parameter
 

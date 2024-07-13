@@ -3,7 +3,7 @@ alembic==1.8.0
 factory_boy==3.2.1
 fastapi==0.111.0
 uvicorn
-pydantic==1.10
+pydantic==1.10.11
 hashids==1.3.1
 jose==1.0.0
 passlib==1.7.4
@@ -19,7 +19,6 @@ python-dotenv
 ulid-py
 pytest-cov
 python-multipart
-boto3
 pillow
 bcrypt
 PyJWT[crypt]
@@ -29,3 +28,5 @@ google-api-python-client
 google-analytics-data
 oauth2client
 pandas
+azure-storage-blob
+azure-identity
