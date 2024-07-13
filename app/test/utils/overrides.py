@@ -1,10 +1,14 @@
-import os
+import json
 
+from fastapi import Header
+
+from app.auth import verify_jwt
 from app.config import settings
 from app.db import get_db
 from app.main import app
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from typing import Any, Dict
 
 ### DBのオーバーライド
 # テストでは一旦データベースをまっさらな状態にしテスト用のデータを投入する、ということを繰り返す
@@ -34,3 +38,10 @@ def override_get_db():
 
 
 app.dependency_overrides[get_db] = override_get_db
+
+### テストの時はJWTの検証をバイパス
+# JWTのpayloadを「署名無し・(Base64エンコードではなく)JSON文字列形式」でAuthorizationヘッダーに指定する。
+# 単にヘッダーで指定されたJSONをDictにして返す
+def override_verify_jwt(authorization=Header(default=None))->Dict[str,Any]:
+    return json.loads(authorization)
+app.dependency_overrides[verify_jwt] = override_verify_jwt
