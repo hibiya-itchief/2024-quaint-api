@@ -1,4 +1,5 @@
 import json
+from typing import Dict
 from factory.alchemy import SQLAlchemyModelFactory
 
 import datetime
@@ -8,40 +9,37 @@ from app import schemas
 from app.test.utils.overrides import TestingSessionLocal
 
 ### schemas.JWTUser
-class MockAuthHeaderBase:
-    def __new__(self) -> str:
-        return {'Authorization': json.dumps(self.user)}
-    user=[{}]
-class ValidAdminUser(MockAuthHeaderBase):
-    user={
-        "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
-        "groups": [
-            "5c091517-25de-44bc-9e42-ffcb8539435c", # quaint-admin
-        ],
-        "name": "adminfortest",
-        "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
-        "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
-    }
-class InvalidAdminUser1(MockAuthHeaderBase):
-    user={
-        "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
-        "groups": [
-            "5c091517-25de-44bc-9e42-ffcb8539435", # 1 charactor missing
-        ],
-        "name": "adminfortest",
-        "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
-        "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
-    }
-class InvalidAdminUser2(MockAuthHeaderBase):
-    user={
-        "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
-        "groups": [
-            "invaliduuid", # 1 charactor missing
-        ],
-        "name": "adminfortest",
-        "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
-        "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
-    }
+def authheader(user:Dict):
+    return {'Authorization': json.dumps(user)}
+
+valid_admin_user={
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "5c091517-25de-44bc-9e42-ffcb8539435c", # quaint-admin
+    ],
+    "name": "adminfortest",
+    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
+invalid_admin_user1={
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "5c091517-25de-44bc-9e42-ffcb8539435", # 1 charactor missing
+    ],
+    "name": "adminfortest",
+    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
+
+invalid_admin_user2={
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "invaliduuid", # 1 charactor missing
+    ],
+    "name": "adminfortest",
+    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
 
 valid_single_group=[{
     "id":"28r",

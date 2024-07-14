@@ -39,7 +39,7 @@ def test_get_all_groups(db):
 
 
 def test_create_multiple_group_success():
-    response = client.post(url="/groups",json=factories.valid_multiple_groups,headers=factories.ValidAdminUser())
+    response = client.post(url="/groups",json=factories.valid_multiple_groups,headers=factories.authheader(factories.valid_admin_user))
     assert response.status_code==200
 
 #もっと細かく書けるかも(https://nmomos.com/tips/2021/03/07/fastapi-docker-8/#toc_id_2)
