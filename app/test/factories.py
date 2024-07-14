@@ -1,3 +1,5 @@
+import json
+from typing import Dict
 from factory.alchemy import SQLAlchemyModelFactory
 
 import datetime
@@ -6,49 +8,87 @@ from app import models
 from app import schemas
 from app.test.utils.overrides import TestingSessionLocal
 
-class Admin_UserCreateByAdmin():
-    username = "admin"
-    password = "password"
-    is_student=True
-    is_family=False
-    is_active=False
-    password_expired=False
+### schemas.JWTUser
+def authheader(user:Dict):
+    return {'Authorization': json.dumps(user)}
 
-class hogehoge_UserCreateByAdmin():
-    username = "hoge_hoge"
-    password = "password"
-    is_student=False
-    is_family=False
-    is_active=False
-    password_expired=False
-class passwordexpired_UserCreateByAdmin():
-    username = "hoge_hoge"
-    password = "password"
-    is_student=False
-    is_family=False
-    is_active=False
-    password_expired=True
-class active_UserCreateByAdmin():
-    username = "active_hoge_hoge"
-    password = "password"
-    is_student=False
-    is_family=False
-    is_active=True
-    password_expired=False
-class inactive_UserCreateByAdmin():
-    username = "active_hoge_hoge"
-    password = "password"
-    is_student=False
-    is_family=False
-    is_active=False
-    password_expired=False
-class active_student_UserCreateByAdmin():
-    username = "active_hoge_hoge"
-    password = "password"
-    is_student=True
-    is_family=False
-    is_active=True
-    password_expired=False
+valid_admin_user={
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "5c091517-25de-44bc-9e42-ffcb8539435c", # quaint-admin
+    ],
+    "name": "adminfortest",
+    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
+invalid_admin_user1={
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "5c091517-25de-44bc-9e42-ffcb8539435", # 1 charactor missing
+    ],
+    "name": "adminfortest",
+    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
+
+invalid_admin_user2={
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "invaliduuid", # 1 charactor missing
+    ],
+    "name": "adminfortest",
+    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
+
+valid_single_group=[{
+    "id":"28r",
+    "type":"play",
+    "groupname":"2年8組",
+    "title":"SING",
+    "description":"ここに説明文",
+    "enable_vote":True,
+    "twitter_url":None,
+    "instagram_url":None,
+    "stream_url":None,
+    "public_thumbnail_image_url":None,
+    "public_page_content_url":"<html><h1>宣伝ページ</h1></html>",
+    "private_page_content_url":"<html><h1>プライベート</h1></html>",
+    "floor":1,
+    "place":"社会科教室"
+    }]
+
+valid_multiple_groups=[
+    {"id":"28r",
+    "type":"play",
+    "groupname":"2年8組",
+    "title":"SING",
+    "description":"ここに説明文",
+    "enable_vote":True,
+    "twitter_url":None,
+    "instagram_url":None,
+    "stream_url":None,
+    "public_thumbnail_image_url":None,
+    "public_page_content_url":"<html><h1>宣伝ページ</h1></html>",
+    "private_page_content_url":"<html><h1>プライベート</h1></html>",
+    "floor":1,
+    "place":"社会科教室"},
+    {"id":"17r",
+    "groupname":"1年7組",
+    "title":"hatopoppo",
+    "description":"ここに説明文",
+    "enable_vote":True,
+    "twitter_url":None,
+    "instagram_url":None,
+    "stream_url":None,
+    "public_thumbnail_image_url":None,
+    "public_page_content_url":"<html><h1>宣伝ページ</h1></html>",
+    "private_page_content_url":"<html><h1>プライベート</h1></html>",
+    "floor":2,
+    "place":"生徒ホール",
+    "type":schemas.GroupType.play}]
+
+
 class tag1_TagCreateByAdmin():
     tagname="タグ1"
 class tag2_TagCreateByAdmin():

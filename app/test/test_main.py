@@ -1,8 +1,8 @@
 import datetime
+import json
 from urllib import response
 
 from app import crud, schemas, models
-from app import db
 from app.config import settings
 from app.main import app
 from app.test import factories
@@ -36,5 +36,10 @@ def test_get_all_groups(db):
     response = client.get("/groups")
 
     assert response.status_code == 200
+
+
+def test_create_multiple_group_success():
+    response = client.post(url="/groups",json=factories.valid_multiple_groups,headers=factories.authheader(factories.valid_admin_user))
+    assert response.status_code==200
 
 #もっと細かく書けるかも(https://nmomos.com/tips/2021/03/07/fastapi-docker-8/#toc_id_2)
