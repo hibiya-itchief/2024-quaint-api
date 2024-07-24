@@ -119,6 +119,21 @@ def chief(user:schemas.JWTUser=Depends(get_current_user)):
     else:
         raise HTTPException(HTTP_403_FORBIDDEN,detail="チーフ会である必要があります")
 
+def check_guest(user:schemas.JWTUser):
+    try:
+        if (user.groups and settings.azure_ad_groups_quaint_guest in user.groups) or check_admin(user):
+            return True
+        else:
+            return False
+    except:
+        return False
+
+def guest(user:schemas.JWTUser=Depends(get_current_user)):
+    if check_guest(user):
+        return user
+    else:
+        raise HTTPException(HTTP_403_FORBIDDEN, detail="ゲストである必要があります")
+
 def check_entry(user:schemas.JWTUser):
     try:
         if (user.groups and settings.azure_ad_groups_quaint_entry in user.groups) or check_admin(user):
@@ -184,7 +199,6 @@ def ad(user:schemas.JWTUser=Depends(get_current_user)):
         raise HTTPException(HTTP_403_FORBIDDEN,detail="学校のアカウント、もしくは事前配布されたアカウントである必要があります")
 def check_parents(user:schemas.JWTUser):
     if check_ad(user) and (user.groups and settings.azure_ad_groups_quaint_parents in user.groups):
-        print(user.groups)
         return True
     else:
         return False
