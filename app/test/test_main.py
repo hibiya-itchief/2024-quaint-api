@@ -136,20 +136,20 @@ def test_vote(db):
                 eventname='テスト公演',
                 target='everyone',
                 ticket_stock=20,
-                starts_at=datetime.datetime.today() + datetime.timedelta(days=1 + i),
-                ends_at=datetime.datetime.today() + datetime.timedelta(days=2 + i),
-                sell_starts=datetime.datetime.today() + datetime.timedelta(days=-1),
-                sell_ends=datetime.datetime.today() + datetime.timedelta(hours=1)
+                starts_at=datetime.today() + timedelta(days=1 + i),
+                ends_at=datetime.today() + timedelta(days=2 + i),
+                sell_starts=datetime.today() + timedelta(days=-1),
+                sell_ends=datetime.today() + timedelta(hours=1)
             )
         event = crud.create_event(db, group.id, event_create)
         events.append(event)
 
     # チケット取得
-    db_ticket_1 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[0].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active",created_at=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=+9))).isoformat())
+    db_ticket_1 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[0].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active",created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
     db.add(db_ticket_1)
     db.commit()
     db.refresh(db_ticket_1)
-    db_ticket_2 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[1].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active",created_at=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=+9))).isoformat())
+    db_ticket_2 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[1].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active",created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
     db.add(db_ticket_2)
     db.commit()
     db.refresh(db_ticket_2)
