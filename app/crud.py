@@ -352,14 +352,7 @@ def get_user_vote(db:Session,user:schemas.JWTUser):
     return False
 
 def get_group_votes(db:Session,group:schemas.Group):
-    #本当はここ学年しばりしたい
-    db_votes1:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_21==group.id).count()
-    # db_votes2:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_22==group.id).all()
-    # db_votes3:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_23==group.id).all()
-    db_votes4:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_11==group.id).count()
-    # db_votes5:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_12==group.id).all()
-    # db_votes6:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_13==group.id).all()
-    return (db_votes1 + db_votes4)
+    return db.query(models.Vote).filter(models.Vote.group_id==group.id).count()
 
 def get_hebe_nowplaying(db:Session):
     return db.query(models.HebeNowplaying).first()

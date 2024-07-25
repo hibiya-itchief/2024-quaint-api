@@ -571,7 +571,7 @@ def chief_delete_ticket(group_id:str,event_id:str,permission:schemas.JWTUser=Dep
 @app.post("/votes",
     summary="投票",
     tags=["votes"],
-    description='### 必要な権限\nなし\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestのみです。一アカウントにつき一回限りです\n- 来年はjson形式で渡そうと思います')
+    description='### 必要な権限\nなし\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestのみです。一アカウントにつき一回限りです')
 def create_vote(groups_id: List[str], user:schemas.JWTUser=Depends(auth.guest), db:Session=Depends(db.get_db)):
     # Groupが存在するかの判定も下で兼ねられる
     tickets:List[schemas.Ticket]=crud.get_list_of_your_tickets(db,user)
@@ -588,7 +588,7 @@ def create_vote(groups_id: List[str], user:schemas.JWTUser=Depends(auth.guest), 
     else:
         filtered_tickets = list(filter(lambda ticket: (ticket.group_id == groups_id[0]) or (ticket.group_id == groups_id[1]), tickets))
     
-    if (len(filtered_tickets) > 2) or (filtered_tickets == None):
+    if len(filtered_tickets) != len(groups_id):
         raise HTTPException(400,"整理券を取得して観劇した団体にのみ投票できます。")
     
     vote = crud.create_vote(db, groups_id, user)
