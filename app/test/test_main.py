@@ -1,7 +1,8 @@
-import datetime
+from datetime import datetime, timedelta, timezone
 import json
 import ulid
 from urllib import response
+import ulid
 
 from app import crud, schemas, models
 from app.config import settings
@@ -28,6 +29,38 @@ def test_read_root_success():
         "description":"日比谷高校オンライン整理券システム「QUAINT」のAPI"
     }
 
+# users test
+def test_users_me_ticket(db):
+    # create group
+    group1 = models.Group(**factories.group1.dict())
+    db.add(group1)
+    db.commit()
+    db.refresh(group1)
+
+    # create event
+    event = crud.create_event(db, group1.id, factories.group1_event)
+
+    # create ticket
+    db_ticket = models.Ticket(id=ulid.new().str, group_id=group1.id, event_id=event.id, owner_id=factories.valid_student_user['oid'], person=1,status="active",created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
+    db.add(db_ticket)
+    db.commit()
+    db.refresh(db_ticket)
+
+    response = client.get("/users/me/tickets", headers=factories.authheader(factories.valid_student_user))
+
+    assert response.status_code == 200
+
+# もっと詳しくやる必要あり
+def test_user_me_owner_of():
+    response = client.get("/users/me/owner_of", headers=factories.authheader(factories.valid_admin_user))
+
+    assert response.status_code == 200
+
+def test_users_owner_of():
+    response = client.get("/users/owner_of", headers=factories.authheader(factories.valid_admin_user))
+    assert response.status_code == 200
+
+# groups test
 def test_get_all_groups(db):
     group1 = models.Group(**factories.group1.dict())
     group2 = models.Group(**factories.group2.dict())
@@ -38,10 +71,52 @@ def test_get_all_groups(db):
 
     assert response.status_code == 200
 
+def test_create_single_group():
+    response = client.post("/groups" ,json=factories.valid_single_group, headers=factories.authheader(factories.valid_admin_user))
+    assert response.status_code == 200
 
 def test_create_multiple_group_success():
     response = client.post(url="/groups",json=factories.valid_multiple_groups,headers=factories.authheader(factories.valid_admin_user))
     assert response.status_code==200
+    
+def test_get_group_information(db):
+    crud.create_group(db,factories.group1)
+    response = client.get(f"/groups/{factories.group1.id}")
+    assert response.status_code == 200
+
+def test_delete_group(db):
+    crud.create_group(db, factories.group1)
+    response = client.delete(f"/groups/{factories.group1.id}", headers=factories.authheader(factories.valid_admin_user))
+    assert response.status_code == 200
+
+def test_create_group_tag(db):
+    crud.create_group(db, factories.group1)
+
+    # create tag
+    db_tag = models.Tag(id="test_tag_id", tagname="test")
+
+    response_404 = client.put(f"/groups/{factories.group1.id}/tags", json={"tag_id":db_tag.id}, headers=factories.authheader(factories.valid_admin_user))
+    assert response_404.status_code == 404
+
+    db.add(db_tag)
+    db.commit()
+    db.refresh(db_tag)
+    response_200 = client.put(f"/groups/{factories.group1.id}/tags", json={"tag_id":db_tag.id}, headers=factories.authheader(factories.valid_admin_user))
+    assert response_200.status_code == 200
+
+def test_delete_group_tag(db):
+    crud.create_group(db, factories.group1)
+    db_tag = models.Tag(id="test", tagname="test_tag")
+    db.add(db_tag)
+    db.commit()
+    db.refresh(db_tag)
+    crud.add_tag(db, factories.group1.id, factories.group_tag_create1)
+
+    response = client.delete(f"/groups/{factories.group1.id}/tags/{factories.group_tag_create1.tag_id}", headers=factories.authheader(factories.valid_admin_user))
+    assert response.status_code == 200
+
+# events
+
 
 # vote
 def test_vote(db):

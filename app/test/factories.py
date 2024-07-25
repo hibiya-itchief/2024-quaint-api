@@ -4,8 +4,7 @@ from factory.alchemy import SQLAlchemyModelFactory
 
 import datetime
 
-from app import models
-from app import schemas
+from app import models, schemas
 from app.test.utils.overrides import TestingSessionLocal
 
 ### schemas.JWTUser
@@ -282,4 +281,21 @@ group1_update = schemas.GroupUpdate(
 
 group_tag_create1 = schemas.GroupTagCreate(
     tag_id='test'
+)
+
+# event
+group1_event = schemas.EventCreate(
+    eventname='一日目第一公演',
+    lottery=False,
+    target=schemas.UserRole.everyone,
+    ticket_stock=20,
+    starts_at=datetime.datetime.today() + datetime.timedelta(days=1),
+    ends_at=datetime.datetime.today() + datetime.timedelta(days=2),
+    sell_starts=datetime.datetime.today() + datetime.timedelta(days=-1),
+    sell_ends=datetime.datetime.today() + datetime.timedelta(hours=1)
+)
+
+# tag
+tag_1 = schemas.TagCreate(
+    tagname='test'
 )
