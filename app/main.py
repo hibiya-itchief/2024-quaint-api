@@ -363,7 +363,6 @@ def delete_grouplink(group_id:str,grouplink_id:str,user:schemas.JWTUser=Depends(
         "403":{"description":"Adminの権限が必要です"},
         "404":{"description":"指定されたGroupが見つかりません"}})
 def create_event(group_id:str,event:schemas.EventCreate,user:schemas.JWTUser=Depends(auth.admin),db:Session=Depends(db.get_db)):
-    print(event.starts_at.tzinfo)
     group = crud.get_group_public(db,group_id)
     if not group:
         raise HTTPException(404,"指定されたGroupが見つかりません")
@@ -570,26 +569,29 @@ def chief_delete_ticket(group_id:str,event_id:str,permission:schemas.JWTUser=Dep
 
 ### Vote Crud
 @app.post("/votes",
-    response_model=schemas.Vote,
     summary="投票",
     tags=["votes"],
-    description='### 必要な権限\nなし\n### ログインが必要か\nはい\n### 説明\n- 一人一回限りです\n- 投票先を指定せずに投票する場合は、空文字をパラメータに指定してください\n- 来年はjson形式で渡そうと思います')
-def create_vote(group_id1:Union[str,None]=None,group_id2:Union[str,None]=None,user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
+    description='### 必要な権限\nなし\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestのみです。一アカウントにつき一回限りです')
+def create_vote(groups_id: List[str], user:schemas.JWTUser=Depends(auth.guest), db:Session=Depends(db.get_db)):
     # Groupが存在するかの判定も下で兼ねられる
-    if group_id1 is None and group_id2 is None:
-        raise HTTPException(400,"投票先の団体を1つ以上選択してください")
     tickets:List[schemas.Ticket]=crud.get_list_of_your_tickets(db,user)
     isVoted=crud.get_user_vote(db,user)
-    if isVoted is not None:
+    
+    if isVoted:
         raise HTTPException(400,"投票は1人1回までです")
-    Flag=False
-    for ticket in tickets:
-        if ticket.group_id==group_id1 or ticket.group_id==group_id2:
-            Flag=True
-            break
-    if not Flag:
+
+    if len(groups_id) > 2:
+        raise HTTPException(400, "投票は二団体までです")
+    
+    if(len(groups_id) == 1):
+        filtered_tickets = list(filter(lambda ticket: ticket.group_id == groups_id[0] , tickets))
+    else:
+        filtered_tickets = list(filter(lambda ticket: (ticket.group_id == groups_id[0]) or (ticket.group_id == groups_id[1]), tickets))
+    
+    if len(filtered_tickets) != len(groups_id):
         raise HTTPException(400,"整理券を取得して観劇した団体にのみ投票できます。")
-    vote=crud.create_vote(db,group_id1,group_id2,user)
+    
+    vote = crud.create_vote(db, groups_id, user)
     return vote
 
 @app.get("/votes/{group_id}",

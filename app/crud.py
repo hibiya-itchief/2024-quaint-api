@@ -332,28 +332,27 @@ def delete_tag(db:Session,id:str):
 
 
 # Vote CRUD
-def create_vote(db:Session,group_id1:str,group_id2:str,user:schemas.JWTUser):
-    try:
-        db_vote=models.Vote(user_id=auth.user_object_id(user),group_id_21=group_id2,group_id_11=group_id1)
-        db.add(db_vote)
-        db.commit()
-        db.refresh(db_vote)
-        return db_vote
-    except IntegrityError as e:
-        raise HTTPException(400,"投票は1人1回までです")
+def create_vote(db:Session, groups_id:List[str],user:schemas.JWTUser):
+    for group_id in groups_id:
+        if get_group_public(db, group_id).enable_vote:
+            try:
+                db_vote=models.Vote(id=ulid.new(), user_id=auth.user_object_id(user), group_id=group_id)
+                db.add(db_vote)
+                db.commit()
+                db.refresh(db_vote)
+            except:
+                raise HTTPException(400, f"{group_id}への投票作成中にエラーが発生しました")
+        else:
+            raise HTTPException(400, "投票不可の団体を指定しています")
+    return groups_id
 
 def get_user_vote(db:Session,user:schemas.JWTUser):
-    db_vote:schemas.Vote=db.query(models.Vote).filter(models.Vote.user_id==auth.user_object_id(user)).first()
-    return db_vote
+    if db.query(models.Vote).filter(models.Vote.user_id==auth.user_object_id(user)).first():
+        return True
+    return False
+
 def get_group_votes(db:Session,group:schemas.Group):
-    #本当はここ学年しばりしたい
-    db_votes1:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_21==group.id).count()
-    # db_votes2:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_22==group.id).all()
-    # db_votes3:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_23==group.id).all()
-    db_votes4:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_11==group.id).count()
-    # db_votes5:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_12==group.id).all()
-    # db_votes6:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_13==group.id).all()
-    return (db_votes1 + db_votes4)
+    return db.query(models.Vote).filter(models.Vote.group_id==group.id).count()
 
 def get_hebe_nowplaying(db:Session):
     return db.query(models.HebeNowplaying).first()
