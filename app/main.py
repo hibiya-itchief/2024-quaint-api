@@ -104,6 +104,18 @@ def read_root():
 def get_list_of_your_tickets(user:schemas.JWTUser = Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
     return crud.get_list_of_your_tickets(db,user)
 
+@app.get(
+    "/users/me/tickets/family",
+    response_model=bool,
+    summary="保護者がすでに優先券を使い切っているか",
+    tags=["users"],
+    description="### 必要な権限\n保護者\n### ログインが必要か\nはい"
+)
+def is_buy_all_family_ticket(user:schemas.JWTUser = Depends(auth.parents), db:Session = Depends(db.get_db)):
+    if crud.count_taken_family_ticket(db, user) >= 2:
+        return True
+    return False
+
 @app.put(
     "/users/{user_sub}/visit",
     summary="ユーザーの入校処理",
@@ -473,6 +485,35 @@ def create_ticket(group_id:str,event_id:str,person:int,user:schemas.JWTUser=Depe
             raise HTTPException(404,"この公演の整理券は売り切れています")
     else:
         raise HTTPException(404,"現在整理券の配布時間外です")
+    
+@app.post(
+    "/groups/{group_id}/events/{event_id}/tickets/family",
+    response_model=schemas.Ticket,
+    summary="家族優先券整理券取得",
+    tags=["tickets"],
+    description="### 必要な権限\n生徒の保護者である\n### ログインが必要か\nはい\n### 説明\n整理券取得できる条件\n- 現在時刻が取りたい整理券の優先券配布時間内\n- 当該公演の整理券在庫が余っている\n- ユーザーは既にこの整理券を取得していない\n- ユーザーは既に当該公演と同じ時間帯の公演の整理券を取得していない\n- 同時入場人数は1名まで(***Azure ADのアカウントは1人という制約は無くしました***)",
+    responses={"404":{"description":"- 指定されたGroupまたはEventが見つかりません\n- 既にこの公演・この公演と同じ時間帯の公演の整理券を取得している場合、新たに取得はできません\n- この公演の整理券は売り切れています\n- 現在整理券の配布時間外です"},
+        "400":{"description":"- 同時入場人数は3人まで(***Azure ADのアカウントは1人という制約は無くしました***)です\n- 校内への来場処理をしたユーザーのみが整理券を取得できます"}})
+def create_family_ticket(group_id:str,event_id:str,user:schemas.JWTUser=Depends(auth.parents), db:Session=Depends(db.get_db)):
+    event = crud.get_event(db,event_id)
+    if not event:
+        raise HTTPException(404,"指定されたGroupまたはEventが見つかりません")
+    if not auth.check_role(event.target,user):
+        raise HTTPException(HTTP_403_FORBIDDEN,"この公演は整理券を取得できる人が制限されています。")
+    
+    if datetime.fromisoformat(settings.family_ticket_sell_starts) < datetime.now(timezone(timedelta(hours=+9))):
+        qualified:bool=crud.check_qualified_for_ticket(db,event,user)
+        if crud.count_tickets_for_event(db,event)+1<=event.ticket_stock and qualified:##まだチケットが余っていて、同時間帯の公演の整理券取得ではない
+            if crud.count_taken_family_ticket(db, user) < 2:
+                return crud.create_ticket(db,event,user,1, True)
+            else:
+                raise HTTPException(404, "既に保護者用優先券を2枚以上取得しています。")
+        elif not qualified:
+            raise HTTPException(404,"既にこの公演・この公演と重複する時間帯の公演の整理券を取得している場合、新たに取得はできません。")
+        else:
+            raise HTTPException(404,"この公演の整理券は売り切れています")
+    else:
+        raise HTTPException(404,"現在優先券の配布時間外です")
 
 @app.get(
     "/groups/{group_id}/events/{event_id}/tickets",
