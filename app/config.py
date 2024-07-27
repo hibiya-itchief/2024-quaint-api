@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     jwt_publickey:str="-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0i+BMxUUgG6slPW/9oHP\nUrYpoLX08NNTsFpEwAkpBHxzbauFc2SmFaFnmkkco8lfCQs66sj6fwtTtSc4RH+Z\nncFRaxV5M+AS7utyGhS9iNAg6u5DaGAxbMm1NAqUkuNLGS+pVx+p75b681inCBBu\nVxpPF0eCNMsUfMPDBKKKS6ABuIpl4Ep3BDXLCSfciBFixDA6poIDy7tryfcpglyw\nuq84ROrOBLU3kTaTM4zl8x2VRkGGdU88+7WhpVgB7s7uSJmzmWtojvDGp+1tylqp\nB4geNVB8rjqkZQjr9Y0oI2sJuIAYzDaBWwQsVUMmp2JO64kR8P1P7i99graUaGOd\nJwIDAQAB\n-----END PUBLIC KEY-----"
 
     # 星陵祭の設定
-    family_ticket_sell_starts = os.getenv('FAMILY_TICKET_SELL_STARTS')
+    family_ticket_sell_starts:str = os.getenv('FAMILY_TICKET_SELL_STARTS')
 
     # Azure Blob Storage
     connect_str:str = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
