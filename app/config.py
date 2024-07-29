@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     jwt_privatekey:str=os.getenv('JWT_PRIVATEKEY')
     jwt_publickey:str="-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0i+BMxUUgG6slPW/9oHP\nUrYpoLX08NNTsFpEwAkpBHxzbauFc2SmFaFnmkkco8lfCQs66sj6fwtTtSc4RH+Z\nncFRaxV5M+AS7utyGhS9iNAg6u5DaGAxbMm1NAqUkuNLGS+pVx+p75b681inCBBu\nVxpPF0eCNMsUfMPDBKKKS6ABuIpl4Ep3BDXLCSfciBFixDA6poIDy7tryfcpglyw\nuq84ROrOBLU3kTaTM4zl8x2VRkGGdU88+7WhpVgB7s7uSJmzmWtojvDGp+1tylqp\nB4geNVB8rjqkZQjr9Y0oI2sJuIAYzDaBWwQsVUMmp2JO64kR8P1P7i99graUaGOd\nJwIDAQAB\n-----END PUBLIC KEY-----"
 
+    # 星陵祭の設定
+    family_ticket_sell_starts:str = os.getenv('FAMILY_TICKET_SELL_STARTS')
+
     # Azure Blob Storage
     connect_str:str = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
     container_name:str = os.getenv('AZURE_BLOB_STORAGE_CONTAINER_NAME')
@@ -44,6 +47,7 @@ class Settings(BaseSettings):
     azure_ad_groups_quaint_students='865bb05d-cb7d-4919-b18d-8b977ec0499b'
     azure_ad_groups_quaint_teachers='0a8ee476-cd37-4c31-bd6e-c34e750574f4'
     azure_ad_groups_quaint_chief='67e48f08-22e0-4ec4-9674-1428aaa5c055'
+    azure_ad_groups_quaint_guest='94c45b57-680c-4b5b-a98b-d78f1fd90d71'
 
     ## JWT EXPIRE
     access_token_expire:datetime.timedelta=datetime.timedelta(days=10)

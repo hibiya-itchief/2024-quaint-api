@@ -41,13 +41,9 @@ class Tag(Base):
 
 class Vote(Base):
     __tablename__ = "votes"
-    user_id = Column(VARCHAR(255),unique=True,nullable=False,primary_key=True)# userdefined unique id
-    group_id_21 = Column(VARCHAR(255),ForeignKey("groups.id"),nullable=True)#userdefined id
-    # group_id_22 = Column(VARCHAR(255),ForeignKey("groups.id"),nullable=True)#userdefined id
-    # group_id_23 = Column(VARCHAR(255),ForeignKey("groups.id"),nullable=True)#userdefined id
-    group_id_11 = Column(VARCHAR(255),ForeignKey("groups.id"),nullable=True)#userdefined id
-    # group_id_12 = Column(VARCHAR(255),ForeignKey("groups.id"),nullable=True)#userdefined id
-    # group_id_13 = Column(VARCHAR(255),ForeignKey("groups.id"),nullable=True)#userdefined id
+    id = Column(VARCHAR(255),primary_key=True,index=True, unique=True)#ULID
+    user_id = Column(VARCHAR(255), nullable=False)
+    group_id = Column(VARCHAR(255),ForeignKey("groups.id"),nullable=False)
 
 
 class Group(Base):

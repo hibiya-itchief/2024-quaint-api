@@ -55,6 +55,9 @@ def get_list_of_your_tickets(db:Session,user:schemas.JWTUser):
     db_tickets:List[schemas.Ticket] = db.query(models.Ticket).filter(models.Ticket.owner_id==auth.user_object_id(user)).all()
     return db_tickets
 
+def count_taken_family_ticket(db:Session, user:schemas.JWTUser) -> int:
+    return db.query(models.Ticket).filter(models.Ticket.owner_id==auth.user_object_id(user), models.Ticket.is_family_ticket==True, models.Ticket.status=='active').count()
+
 def create_group(db:Session,group:schemas.GroupCreate):
     db_group = models.Group(**group.dict())
     db.add(db_group)
@@ -257,8 +260,8 @@ def check_qualified_for_ticket(db:Session,event:schemas.Event,user:schemas.JWTUs
     if(params.max_tickets_per_day!=0 and tickets_num_per_day+1>params.max_tickets_per_day): # 1人1日何枚までの制限がある かつ それをオーバーしている
         return False
     return True
-def create_ticket(db:Session,event:schemas.Event,user:schemas.JWTUser,person:int):
-    db_ticket = models.Ticket(id=ulid.new().str,group_id=event.group_id,event_id=event.id,owner_id=auth.user_object_id(user),person=person,status="active",created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
+def create_ticket(db:Session,event:schemas.Event,user:schemas.JWTUser,person:int, is_family_ticket:bool=False):
+    db_ticket = models.Ticket(id=ulid.new().str,group_id=event.group_id,event_id=event.id,owner_id=auth.user_object_id(user),person=person,status="active", is_family_ticket=is_family_ticket,created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
     db.add(db_ticket)
     db.commit()
     db.refresh(db_ticket)
@@ -332,28 +335,27 @@ def delete_tag(db:Session,id:str):
 
 
 # Vote CRUD
-def create_vote(db:Session,group_id1:str,group_id2:str,user:schemas.JWTUser):
-    try:
-        db_vote=models.Vote(user_id=auth.user_object_id(user),group_id_21=group_id2,group_id_11=group_id1)
-        db.add(db_vote)
-        db.commit()
-        db.refresh(db_vote)
-        return db_vote
-    except IntegrityError as e:
-        raise HTTPException(400,"投票は1人1回までです")
+def create_vote(db:Session, groups_id:List[str],user:schemas.JWTUser):
+    for group_id in groups_id:
+        if get_group_public(db, group_id).enable_vote:
+            try:
+                db_vote=models.Vote(id=ulid.new(), user_id=auth.user_object_id(user), group_id=group_id)
+                db.add(db_vote)
+                db.commit()
+                db.refresh(db_vote)
+            except:
+                raise HTTPException(400, f"{group_id}への投票作成中にエラーが発生しました")
+        else:
+            raise HTTPException(400, "投票不可の団体を指定しています")
+    return groups_id
 
 def get_user_vote(db:Session,user:schemas.JWTUser):
-    db_vote:schemas.Vote=db.query(models.Vote).filter(models.Vote.user_id==auth.user_object_id(user)).first()
-    return db_vote
+    if db.query(models.Vote).filter(models.Vote.user_id==auth.user_object_id(user)).first():
+        return True
+    return False
+
 def get_group_votes(db:Session,group:schemas.Group):
-    #本当はここ学年しばりしたい
-    db_votes1:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_21==group.id).count()
-    # db_votes2:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_22==group.id).all()
-    # db_votes3:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_23==group.id).all()
-    db_votes4:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_11==group.id).count()
-    # db_votes5:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_12==group.id).all()
-    # db_votes6:List[schemas.Vote]=db.query(models.Vote).filter(models.Vote.group_id_13==group.id).all()
-    return (db_votes1 + db_votes4)
+    return db.query(models.Vote).filter(models.Vote.group_id==group.id).count()
 
 def get_hebe_nowplaying(db:Session):
     return db.query(models.HebeNowplaying).first()
