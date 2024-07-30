@@ -569,30 +569,22 @@ def chief_delete_ticket(group_id:str,event_id:str,permission:schemas.JWTUser=Dep
 
 ### Vote Crud
 @app.post("/votes",
+    response_model=schemas.Vote,
     summary="投票",
     tags=["votes"],
     description='### 必要な権限\nなし\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestのみです。一アカウントにつき一回限りです')
-def create_vote(groups_id: List[str], user:schemas.JWTUser=Depends(auth.guest), db:Session=Depends(db.get_db)):
+def create_vote(group_id:str, user:schemas.JWTUser=Depends(auth.guest), db:Session=Depends(db.get_db)):
     # Groupが存在するかの判定も下で兼ねられる
     tickets:List[schemas.Ticket]=crud.get_list_of_your_tickets(db,user)
-    isVoted=crud.get_user_vote(db,user)
+    isVoted=not crud.get_user_votable(db,user)
     
     if isVoted:
-        raise HTTPException(400,"投票は1人1回までです")
+        raise HTTPException(400,"投票は1人2回までです")
 
-    if len(groups_id) > 2:
-        raise HTTPException(400, "投票は二団体までです")
-    
-    if(len(groups_id) == 1):
-        filtered_tickets = list(filter(lambda ticket: ticket.group_id == groups_id[0] , tickets))
-    else:
-        filtered_tickets = list(filter(lambda ticket: (ticket.group_id == groups_id[0]) or (ticket.group_id == groups_id[1]), tickets))
-    
-    if len(filtered_tickets) != len(groups_id):
+    if len(list(filter(lambda ticket: ticket.group_id == group_id , tickets))) == 0:
         raise HTTPException(400,"整理券を取得して観劇した団体にのみ投票できます。")
     
-    vote = crud.create_vote(db, groups_id, user)
-    return vote
+    return crud.create_vote(db, group_id, user)
 
 @app.get("/votes/{group_id}",
     response_model=schemas.GroupVotesResponse,
@@ -608,17 +600,34 @@ def get_group_votes(group_id:str,user:schemas.JWTUser=Depends(auth.get_current_u
         raise HTTPException(404,"指定された団体が見つかりません")
     return schemas.GroupVotesResponse(group_id=g.id,votes_num=crud.get_group_votes(db,g))
 
-@app.get("/users/me/votes",
-    response_model=schemas.Vote,
-    summary="userが投票済みかを確認",
+@app.get("/users/me/votable",
+    response_model=bool,
+    summary="userが投票可能かを確認",
     tags=["votes"],
-    description='### 必要な権限\nなし\n### ログインが必要か\nはい\n ### 「重要」未投票の場合は404が返ります',
-    responses={"404":{"description":"まだ投票をしていません"}})
-def get_user_vote(user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
-    v= crud.get_user_vote(db,user)
-    if v is None:
-        raise HTTPException(404,"まだ投票をしていません")
-    return v
+    description='### 必要な権限\nなし\n### ログインが必要か\nはい'
+)
+def get_user_votable(user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
+    if crud.get_user_votable(db,user):
+        return True
+    return False
+
+@app.get("/users/me/votes/count",
+    response_model=int,
+    summary="ユーザーが投票した数を返します",
+    tags=["votes"],
+    description="ユーザーが投票した数を返します",
+    )
+def get_user_vote_count(user:schemas.JWTUser=Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
+    return crud.get_user_vote_count(db, user)
+
+@app.get("/users/me/votes",
+    response_model=List[schemas.Vote],
+    summary="userの投票を返す",
+    description="userが投票した投票情報を返す",
+    tags=["votes"]
+    )
+def get_user_votes(user:schemas.JWTUser=Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
+    return crud.get_user_votes(db, user)
 
 
 # Tag
