@@ -576,13 +576,16 @@ def chief_delete_ticket(group_id:str,event_id:str,permission:schemas.JWTUser=Dep
 def create_vote(group_id:str, user:schemas.JWTUser=Depends(auth.guest), db:Session=Depends(db.get_db)):
     # Groupが存在するかの判定も下で兼ねられる
     tickets:List[schemas.Ticket]=crud.get_list_of_your_tickets(db,user)
-    isVoted=not crud.get_user_votable(db,user)
+    isVoted = True if crud.get_user_vote_count >= 2 else False
     
     if isVoted:
         raise HTTPException(400,"投票は1人2回までです")
 
     if len(list(filter(lambda ticket: ticket.group_id == group_id , tickets))) == 0:
         raise HTTPException(400,"整理券を取得して観劇した団体にのみ投票できます。")
+
+    if not crud.get_user_votable(db, user, group_id):
+        raise HTTPException(400, "すでにその団体に対して投票済みです")
     
     return crud.create_vote(db, group_id, user)
 
@@ -607,9 +610,18 @@ def get_group_votes(group_id:str,user:schemas.JWTUser=Depends(auth.get_current_u
     description='### 必要な権限\nなし\n### ログインが必要か\nはい'
 )
 def get_user_votable(user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
-    if crud.get_user_votable(db,user):
+    if crud.get_user_vote_count < 2:
         return True
     return False
+
+@app.get("/users/me/votes/group",
+    response_model=bool,
+    summary="指定された団体に投票済みかを判定",
+    tags=["votes"],
+    description="指定された団体に対して投票済みかをbool型で返す"
+    )
+def get_user_votable_group(group_id:str, user:schemas.JWTUser=Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
+    return crud.get_user_votable(db,user,group_id)
 
 @app.get("/users/me/votes/count",
     response_model=int,
