@@ -572,11 +572,14 @@ def chief_delete_ticket(group_id:str,event_id:str,permission:schemas.JWTUser=Dep
     response_model=schemas.Vote,
     summary="投票",
     tags=["votes"],
-    description='### 必要な権限\nなし\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestのみです。一アカウントにつき一回限りです')
-def create_vote(group_id:str, user:schemas.JWTUser=Depends(auth.guest), db:Session=Depends(db.get_db)):
+    description='### 必要な権限\nなし\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestとparentsのみです。一アカウントにつき一回限りです')
+def create_vote(group_id:str, user:schemas.JWTUser=Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
+    if not(auth.check_parents(user) or auth.check_guest(user)):
+        raise HTTPException(400, "ゲストまたは保護者である必要があります")
+    
     # Groupが存在するかの判定も下で兼ねられる
     tickets:List[schemas.Ticket]=crud.get_list_of_your_tickets(db,user)
-    isVoted = True if crud.get_user_vote_count >= 2 else False
+    isVoted = True if crud.get_user_vote_count(db, user) >= 2 else False
     
     if isVoted:
         raise HTTPException(400,"投票は1人2回までです")

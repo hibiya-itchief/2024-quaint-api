@@ -349,7 +349,7 @@ def create_vote(db:Session, group_id:str, user:schemas.JWTUser) -> schemas.Vote:
 # ユーザーが指定された団体に対して投票可能かを返す
 # ユーザーが何回投票しているかなどは判定してないので注意
 def get_user_votable(db:Session,user:schemas.JWTUser, group_id) -> bool:
-    vote = db.query(models.Vote).filter(models.Vote.group_id == group_id).first()
+    vote = db.query(models.Vote).filter(models.Vote.group_id == group_id, models.Vote.user_id == auth.user_object_id(user)).first()
     
     if vote:
         # すでにその団体に投票済み
