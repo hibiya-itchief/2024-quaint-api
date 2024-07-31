@@ -119,6 +119,7 @@ def test_delete_group_tag(db):
 
 
 # vote
+# voteの作成・カウント
 def test_vote(db):
     # 団体作成
     group1 = models.Group(**factories.group1.dict())
@@ -195,5 +196,53 @@ def test_vote(db):
 
     response_8 = client.post(url="/votes", params={"group_id":"28r"}, headers=factories.authheader(factories.valid_student_user))
     assert response_8.json() == {"detail":"ゲストまたは保護者である必要があります"}
+
+# userが投票可能か
+def test_get_user_votable(db):
+    group1 = models.Group(**factories.group1.dict())
+    group2 = models.Group(**factories.group2.dict())
+
+    db.add_all([group1,group2])
+    db.flush()
+    db.commit()
+
+    vote_1 = models.Vote(id=ulid.new().str, group_id=group1.id, user_id=factories.valid_guest_user['oid'])
+    db.add(vote_1)
+    db.commit()
+    db.refresh(vote_1)
+
+    response_1 =  client.get(url="/users/me/votable", headers=factories.authheader(factories.valid_guest_user))
+    assert response_1.json() == True
+
+    vote_2 = models.Vote(id=ulid.new().str, group_id=group2.id, user_id=factories.valid_guest_user['oid'])
+    db.add(vote_2)
+    db.commit()
+    db.refresh(vote_2)
+
+    response_2 =  client.get(url="/users/me/votable", headers=factories.authheader(factories.valid_guest_user))
+    assert response_2.json() == False
+
+# userの投票情報を取得
+def test_get_user_votes(db):
+    group1 = models.Group(**factories.group1.dict())
+    group2 = models.Group(**factories.group2.dict())
+
+    db.add_all([group1,group2])
+    db.flush()
+    db.commit()
+
+    vote_1 = models.Vote(id=ulid.new().str, group_id=group1.id, user_id=factories.valid_guest_user['oid'])
+    db.add(vote_1)
+    db.commit()
+    db.refresh(vote_1)
+
+    vote_2 = models.Vote(id=ulid.new().str, group_id=group2.id, user_id=factories.valid_guest_user['oid'])
+    db.add(vote_2)
+    db.commit()
+    db.refresh(vote_2)
+
+    response = client.get(url="/users/me/votes", headers=factories.authheader(factories.valid_guest_user))
+    assert response.status_code == 200
+
 
 #もっと細かく書けるかも(https://nmomos.com/tips/2021/03/07/fastapi-docker-8/#toc_id_2)

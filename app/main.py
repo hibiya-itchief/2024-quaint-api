@@ -613,7 +613,7 @@ def get_group_votes(group_id:str,user:schemas.JWTUser=Depends(auth.get_current_u
     description='### 必要な権限\nなし\n### ログインが必要か\nはい'
 )
 def get_user_votable(user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
-    if crud.get_user_vote_count < 2:
+    if crud.get_user_vote_count(db,user) < 2:
         return True
     return False
 
