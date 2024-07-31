@@ -227,7 +227,7 @@ group2 = schemas.GroupCreate(
     type=schemas.GroupType.play
 )
 
-group4 = schemas.GroupCreate(
+group5 = schemas.GroupCreate(
     id="11r",
     groupname="1年1組",
     title="hatopoppo",

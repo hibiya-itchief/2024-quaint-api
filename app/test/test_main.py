@@ -124,7 +124,7 @@ def test_vote(db):
     # 団体作成
     group1 = models.Group(**factories.group1.dict())
     group2 = models.Group(**factories.group2.dict())
-    group3 = models.Group(**factories.group4.dict())
+    group3 = models.Group(**factories.group5.dict())
 
     db.add_all([group1,group2,group3])
     db.flush()
@@ -171,30 +171,30 @@ def test_vote(db):
     db.refresh(student_db_ticket_1)
 
     # 投票
-    response_1 = client.post(url="/votes", params={"group_id":"28r"}, headers=factories.authheader(factories.valid_guest_user))
+    response_1 = client.post(url="/votes", params={"group_id":group1.id}, headers=factories.authheader(factories.valid_guest_user))
     assert response_1.status_code == 200
 
-    response_2 = client.post(url="/votes", json=["28r", "17r"], headers=factories.authheader(factories.valid_guest_user))
+    response_2 = client.post(url="/votes", json=[group1.id, group2.id], headers=factories.authheader(factories.valid_guest_user))
     assert response_2.status_code == 422
 
     response_3 = client.get(url=f"/votes/{group1.id}", headers=factories.authheader(factories.valid_admin_user))
     assert response_3.status_code == 200
-    assert response_3.json() == {"group_id": "28r", "votes_num": 1}
+    assert response_3.json() == {"group_id": group1.id, "votes_num": 1}
 
-    response_4 = client.post(url="/votes", params={"group_id":"17r"}, headers=factories.authheader(factories.valid_guest_user))
+    response_4 = client.post(url="/votes", params={"group_id":group2.id}, headers=factories.authheader(factories.valid_guest_user))
     assert response_4.status_code == 200
 
-    response_5 = client.post(url="/votes", params={"group_id":"11r"}, headers=factories.authheader(factories.valid_guest_user))
+    response_5 = client.post(url="/votes", params={"group_id":group3.id}, headers=factories.authheader(factories.valid_guest_user))
     assert response_5.json() == {"detail":"投票は1人2回までです"}
 
-    response_6 = client.post(url="/votes", params={"group_id":"28r"}, headers=factories.authheader(factories.valid_parent_user))
+    response_6 = client.post(url="/votes", params={"group_id":group1.id}, headers=factories.authheader(factories.valid_parent_user))
     assert response_6.status_code == 200
 
     response_7 = client.get(url=f"/votes/{group1.id}", headers=factories.authheader(factories.valid_admin_user))
     assert response_7.status_code == 200
-    assert response_7.json() == {"group_id": "28r", "votes_num": 2}
+    assert response_7.json() == {"group_id": group1.id, "votes_num": 2}
 
-    response_8 = client.post(url="/votes", params={"group_id":"28r"}, headers=factories.authheader(factories.valid_student_user))
+    response_8 = client.post(url="/votes", params={"group_id":group1.id}, headers=factories.authheader(factories.valid_student_user))
     assert response_8.json() == {"detail":"ゲストまたは保護者である必要があります"}
 
 # userが投票可能か
