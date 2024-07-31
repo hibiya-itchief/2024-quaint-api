@@ -123,15 +123,16 @@ def test_vote(db):
     # 団体作成
     group1 = models.Group(**factories.group1.dict())
     group2 = models.Group(**factories.group2.dict())
+    group3 = models.Group(**factories.group4.dict())
 
-    db.add_all([group1,group2])
+    db.add_all([group1,group2,group3])
     db.flush()
     db.commit()
 
     events = []
 
     # 公演作成
-    for i, group in enumerate([group1, group2]):
+    for i, group in enumerate([group1, group2, group3]):
         event_create = schemas.EventCreate(
                 eventname='テスト公演',
                 target='everyone',
@@ -149,20 +150,50 @@ def test_vote(db):
     db.add(db_ticket_1)
     db.commit()
     db.refresh(db_ticket_1)
-    db_ticket_2 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[1].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active",created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
+    db_ticket_2 = models.Ticket(id=ulid.new().str,group_id=group2.id,event_id=events[1].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active",created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
     db.add(db_ticket_2)
     db.commit()
     db.refresh(db_ticket_2)
+    db_ticket_3 = models.Ticket(id=ulid.new().str, group_id=group3.id, event_id=events[2].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active",created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
+    db.add(db_ticket_3)
+    db.commit()
+    db.refresh(db_ticket_3)
+
+    parent_db_ticket_1 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[0].id, owner_id=factories.valid_parent_user['oid'], person=1, status="active",created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
+    db.add(parent_db_ticket_1)
+    db.commit()
+    db.refresh(parent_db_ticket_1)
+
+    student_db_ticket_1 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[0].id, owner_id=factories.valid_student_user['oid'], person=1, status="active",created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
+    db.add(student_db_ticket_1)
+    db.commit()
+    db.refresh(student_db_ticket_1)
 
     # 投票
-    response_1 = client.post(url="/votes", json=["28r", "17r"], headers=factories.authheader(factories.valid_guest_user))
+    response_1 = client.post(url="/votes", params={"group_id":"28r"}, headers=factories.authheader(factories.valid_guest_user))
     assert response_1.status_code == 200
 
     response_2 = client.post(url="/votes", json=["28r", "17r"], headers=factories.authheader(factories.valid_guest_user))
-    assert response_2.status_code == 400
+    assert response_2.status_code == 422
 
     response_3 = client.get(url=f"/votes/{group1.id}", headers=factories.authheader(factories.valid_admin_user))
     assert response_3.status_code == 200
     assert response_3.json() == {"group_id": "28r", "votes_num": 1}
+
+    response_4 = client.post(url="/votes", params={"group_id":"17r"}, headers=factories.authheader(factories.valid_guest_user))
+    assert response_4.status_code == 200
+
+    response_5 = client.post(url="/votes", params={"group_id":"11r"}, headers=factories.authheader(factories.valid_guest_user))
+    assert response_5.json() == {"detail":"投票は1人2回までです"}
+
+    response_6 = client.post(url="/votes", params={"group_id":"28r"}, headers=factories.authheader(factories.valid_parent_user))
+    assert response_6.status_code == 200
+
+    response_7 = client.get(url=f"/votes/{group1.id}", headers=factories.authheader(factories.valid_admin_user))
+    assert response_7.status_code == 200
+    assert response_7.json() == {"group_id": "28r", "votes_num": 2}
+
+    response_8 = client.post(url="/votes", params={"group_id":"28r"}, headers=factories.authheader(factories.valid_student_user))
+    assert response_8.json() == {"detail":"ゲストまたは保護者である必要があります"}
 
 #もっと細かく書けるかも(https://nmomos.com/tips/2021/03/07/fastapi-docker-8/#toc_id_2)
