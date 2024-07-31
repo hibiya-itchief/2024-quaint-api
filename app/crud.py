@@ -55,6 +55,9 @@ def get_list_of_your_tickets(db:Session,user:schemas.JWTUser):
     db_tickets:List[schemas.Ticket] = db.query(models.Ticket).filter(models.Ticket.owner_id==auth.user_object_id(user)).all()
     return db_tickets
 
+def count_taken_family_ticket(db:Session, user:schemas.JWTUser) -> int:
+    return db.query(models.Ticket).filter(models.Ticket.owner_id==auth.user_object_id(user), models.Ticket.is_family_ticket==True, models.Ticket.status=='active').count()
+
 def create_group(db:Session,group:schemas.GroupCreate):
     db_group = models.Group(**group.dict())
     db.add(db_group)
@@ -257,8 +260,8 @@ def check_qualified_for_ticket(db:Session,event:schemas.Event,user:schemas.JWTUs
     if(params.max_tickets_per_day!=0 and tickets_num_per_day+1>params.max_tickets_per_day): # 1人1日何枚までの制限がある かつ それをオーバーしている
         return False
     return True
-def create_ticket(db:Session,event:schemas.Event,user:schemas.JWTUser,person:int):
-    db_ticket = models.Ticket(id=ulid.new().str,group_id=event.group_id,event_id=event.id,owner_id=auth.user_object_id(user),person=person,status="active",created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
+def create_ticket(db:Session,event:schemas.Event,user:schemas.JWTUser,person:int, is_family_ticket:bool=False):
+    db_ticket = models.Ticket(id=ulid.new().str,group_id=event.group_id,event_id=event.id,owner_id=auth.user_object_id(user),person=person,status="active", is_family_ticket=is_family_ticket,created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat())
     db.add(db_ticket)
     db.commit()
     db.refresh(db_ticket)

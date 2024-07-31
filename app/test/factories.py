@@ -227,6 +227,23 @@ group2 = schemas.GroupCreate(
     type=schemas.GroupType.play
 )
 
+group4 = schemas.GroupCreate(
+    id="33r",
+    groupname="33r",
+    title="hatopoppo",
+    description="ここに説明文",
+    enable_vote=True,
+    twitter_url=None,
+    instagram_url=None,
+    stream_url=None,
+    public_thumbnail_image_url=None,
+    public_page_content_url="<html><h1>宣伝ページ</h1></html>",
+    private_page_content_url="<html><h1>プライベート</h1></html>",
+    floor=4,
+    place="33r",
+    type=schemas.GroupType.play
+)
+
 group5 = schemas.GroupCreate(
     id="11r",
     groupname="1年1組",
@@ -245,6 +262,7 @@ group5 = schemas.GroupCreate(
 )
 
 # 変数
+# テストグループ
 group3 = schemas.GroupCreate(
     id="test_1",
     groupname="テストグループ",
@@ -306,10 +324,10 @@ group1_event = schemas.EventCreate(
     lottery=False,
     target=schemas.UserRole.everyone,
     ticket_stock=20,
-    starts_at=datetime.datetime.today() + datetime.timedelta(days=1),
-    ends_at=datetime.datetime.today() + datetime.timedelta(days=2),
-    sell_starts=datetime.datetime.today() + datetime.timedelta(days=-1),
-    sell_ends=datetime.datetime.today() + datetime.timedelta(hours=1)
+    starts_at=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=+9))) + datetime.timedelta(days=1),
+    ends_at=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=+9))) + datetime.timedelta(days=2),
+    sell_starts=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=+9))) + datetime.timedelta(days=-1),
+    sell_ends=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=+9))) + datetime.timedelta(hours=1)
 )
 
 # tag

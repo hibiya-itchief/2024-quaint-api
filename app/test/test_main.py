@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 import json
-import ulid
 from urllib import response
 import ulid
 
@@ -117,6 +116,97 @@ def test_delete_group_tag(db):
 
 # events
 
+# tickets
+# 優先券取得テスト
+# 時間は正しい場合
+def test_create_family_ticket(db):
+    # 環境変数書き換え
+    # テスト実行後に変数は元の値に戻してくれるみたい
+    settings.family_ticket_sell_starts = (datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=-1)).isoformat()
+
+    # 団体作成
+    group1 = models.Group(**factories.group1.dict())
+    group2 = models.Group(**factories.group2.dict())
+    group3 = models.Group(**factories.group4.dict()) # factories.group3はtypeがtestなのでgroup4
+
+    db.add_all([group1,group2, group3])
+    db.flush()
+    db.commit()
+
+    events = []
+
+    # 公演作成
+    for i, group in enumerate([group1, group2, group3]):
+        event_create = schemas.EventCreate(
+                eventname='テスト公演',
+                target='everyone',
+                ticket_stock=20,
+                starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=2 + i), # 優先券以外では取得不可の時間設定
+                ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=3 + i),
+                sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=+1, hours=+0),
+                sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=+1, hours=+1)
+            )
+        event = crud.create_event(db, group.id, event_create)
+        events.append(event)
+
+    response_1 = client.post(f"/groups/{group1.id}/events/{events[0].id}/tickets/family", headers=factories.authheader(factories.valid_parent_user))
+    assert response_1.status_code == 200
+    response_2 = client.post(f"/groups/{group1.id}/events/{events[1].id}/tickets/family", headers=factories.authheader(factories.valid_parent_user))
+    assert response_2.status_code == 200
+    response_3 = client.post(f"/groups/{group1.id}/events/{events[2].id}/tickets/family", headers=factories.authheader(factories.valid_parent_user))
+    assert response_3.status_code == 404
+
+def test_create_family_ticket_wrong_time(db):
+    # 環境変数書き換え
+    # テスト実行後に変数は元の値に戻してくれるみたい
+    settings.family_ticket_sell_starts = (datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=+1)).isoformat()
+
+    # 団体作成
+    group1 = models.Group(**factories.group1.dict())
+    db.add(group1)
+    db.commit()
+    db.refresh(group1)
+
+    # 公演作成
+    event_create = schemas.EventCreate(
+                eventname='テスト公演',
+                target='everyone',
+                ticket_stock=20,
+                starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=2), # 優先券以外では取得不可の時間設定
+                ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=3),
+                sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=+1, hours=+0),
+                sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=+1, hours=+1)
+            )
+    event = crud.create_event(db, group1.id, event_create)
+
+    response = client.post(f"/groups/{group1.id}/events/{event.id}/tickets/family", headers=factories.authheader(factories.valid_parent_user))
+    assert response.status_code == 404
+
+def test_create_family_ticket_invalid_user(db):
+    # 環境変数書き換え
+    # テスト実行後に変数は元の値に戻してくれるみたい
+    settings.family_ticket_sell_starts = (datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=+1)).isoformat()
+
+    # 団体作成
+    group1 = models.Group(**factories.group1.dict())
+    db.add(group1)
+    db.commit()
+    db.refresh(group1)
+
+    # 公演作成
+    event_create = schemas.EventCreate(
+                eventname='テスト公演',
+                target='everyone',
+                ticket_stock=20,
+                starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=2), # 優先券以外では取得不可の時間設定
+                ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=3),
+                sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=+1, hours=+0),
+                sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=+1, hours=+1)
+            )
+    event = crud.create_event(db, group1.id, event_create)
+
+    response = client.post(f"/groups/{group1.id}/events/{event.id}/tickets/family", headers=factories.authheader(factories.valid_student_user))
+    assert response.status_code == 403
 
 # vote
 # voteの作成・カウント
@@ -138,10 +228,10 @@ def test_vote(db):
                 eventname='テスト公演',
                 target='everyone',
                 ticket_stock=20,
-                starts_at=datetime.today() + timedelta(days=1 + i),
-                ends_at=datetime.today() + timedelta(days=2 + i),
-                sell_starts=datetime.today() + timedelta(days=-1),
-                sell_ends=datetime.today() + timedelta(hours=1)
+                starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=1 + i),
+                ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=2 + i),
+                sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=-1),
+                sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=1)
             )
         event = crud.create_event(db, group.id, event_create)
         events.append(event)
