@@ -335,24 +335,44 @@ def delete_tag(db:Session,id:str):
 
 
 # Vote CRUD
-def create_vote(db:Session, groups_id:List[str],user:schemas.JWTUser):
-    for group_id in groups_id:
-        if get_group_public(db, group_id).enable_vote:
-            try:
-                db_vote=models.Vote(id=ulid.new(), user_id=auth.user_object_id(user), group_id=group_id)
-                db.add(db_vote)
-                db.commit()
-                db.refresh(db_vote)
-            except:
-                raise HTTPException(400, f"{group_id}への投票作成中にエラーが発生しました")
-        else:
-            raise HTTPException(400, "投票不可の団体を指定しています")
-    return groups_id
+def create_vote(db:Session, group_id:str, user:schemas.JWTUser) -> schemas.Vote:
+    if get_group_public(db, group_id).enable_vote:
+        try:
+            db_vote=models.Vote(id=ulid.new(), user_id=auth.user_object_id(user), group_id=group_id)
+            created_vote:schemas.Vote = db_vote
+            db.add(db_vote)
+            db.commit()
+            db.refresh(db_vote)
+            return created_vote
+        except:
+            raise HTTPException(400, f"{group_id}への投票作成中にエラーが発生しました")
+    else:
+        raise HTTPException(400, "投票不可の団体を指定しています")
 
-def get_user_vote(db:Session,user:schemas.JWTUser):
-    if db.query(models.Vote).filter(models.Vote.user_id==auth.user_object_id(user)).first():
+# ユーザーが指定された団体に対して投票可能かを返す
+# ユーザーが何回投票しているかなどは判定してないので注意
+def get_user_votable(db:Session,user:schemas.JWTUser, group_id) -> bool:
+    vote = db.query(models.Vote).filter(models.Vote.group_id == group_id, models.Vote.user_id == auth.user_object_id(user)).first()
+    
+    if vote:
+        # すでにその団体に投票済み
+        return False
+    else:
+        # まだその団体に投票していない
         return True
-    return False
+
+# ユーザーが投票した数を返す
+def get_user_vote_count(db:Session, user:schemas.JWTUser) -> int:
+    return db.query(models.Vote).filter(models.Vote.user_id==auth.user_object_id(user)).count()
+
+def get_user_votes(db:Session, user:schemas.JWTUser) -> List[schemas.Vote]:
+    query = db.query(models.Vote).filter(models.Vote.user_id == auth.user_object_id(user)).all()
+
+    votes:List[schemas.Vote] = []
+    for q in query:
+        votes.append(q)
+
+    return votes
 
 def get_group_votes(db:Session,group:schemas.Group):
     return db.query(models.Vote).filter(models.Vote.group_id==group.id).count()

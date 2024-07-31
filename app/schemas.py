@@ -31,7 +31,15 @@ class GroupType(str, Enum):
     test="test" # テスト用団体。全ての機能を利用可能。
     other="other" # その他
 
+# vote
+class VoteCreate(BaseModel):
+    group_id:str
 
+class Vote(VoteCreate):
+    id:str
+    user_id:str
+
+# event
 class EventBase(BaseModel):
     eventname:str
 
