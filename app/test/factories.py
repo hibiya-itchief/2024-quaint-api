@@ -128,6 +128,14 @@ valid_multiple_groups=[
     "place":"生徒ホール",
     "type":schemas.GroupType.play}]
 
+valid_update_group = {
+    "title":"あいうえお",
+    "description":"変更",
+    "floor":"2",
+    "place":"科学室",
+    "type":"play"
+}
+
 
 class tag1_TagCreateByAdmin():
     tagname="タグ1"

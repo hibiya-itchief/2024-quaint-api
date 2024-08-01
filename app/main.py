@@ -245,12 +245,12 @@ def get_group(group_id:str,db:Session=Depends(db.get_db)):
     response_model=schemas.Group,
     summary="Groupを更新",
     tags=['groups'],
-    description="### 必要な権限\nAdminまたは当該グループのOwner\n### ログインが必要か\nはい",
+    description="### 必要な権限\nAdmin・当該グループのOwner・チーフ\n### ログインが必要か\nはい",
     responses={"404":{"description":"指定されたGroupまたはTagが見つかりません"}})
 def update_group(group_id:str,updated_group:schemas.GroupUpdate,user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
     group=crud.get_group_public(db,group_id)
-    if not(auth.check_admin(user) or crud.check_owner_of(db,user,group.id)):
-        raise HTTPException(401,"Adminまたは当該GroupのOwnerの権限が必要です")
+    if not(auth.check_admin(user) or auth.check_chief(user) or crud.check_owner_of(db,user,group.id)):
+        raise HTTPException(401,"Admin・当該GroupのOwner・チーフのいずれかの権限が必要です")
     if not updated_group.public_thumbnail_image_url and group.public_thumbnail_image_url: # サムネイル画像を削除する場合
         blob_storage.delete_image(group.public_thumbnail_image_url)
     u=crud.update_group(db,group,updated_group)
