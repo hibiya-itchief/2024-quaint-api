@@ -55,6 +55,11 @@ def get_list_of_your_tickets(db:Session,user:schemas.JWTUser):
     db_tickets:List[schemas.Ticket] = db.query(models.Ticket).filter(models.Ticket.owner_id==auth.user_object_id(user)).all()
     return db_tickets
 
+# active状態のチケットを取得
+def get_list_of_your_tickets_active(db:Session, user:schemas.JWTUser):
+    db_tickets:List[schemas.Ticket] = db.query(models.Ticket).filter(models.Ticket.owner_id==auth.user_object_id(user), models.Ticket.status == 'active').all()
+    return db_tickets
+
 def count_taken_family_ticket(db:Session, user:schemas.JWTUser) -> int:
     return db.query(models.Ticket).filter(models.Ticket.owner_id==auth.user_object_id(user), models.Ticket.is_family_ticket==True, models.Ticket.status=='active').count()
 
