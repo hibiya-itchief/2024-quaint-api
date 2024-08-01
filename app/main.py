@@ -677,7 +677,8 @@ def get_user_votable(user:schemas.JWTUser=Depends(auth.get_current_user),db:Sess
 def get_user_votable_group(group_id:str, user:schemas.JWTUser=Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
     return not crud.get_user_votable(db,user,group_id)
 
-@app.get("/users/me/votes/count",
+# urlを/users/me/votes/countにすると/users/me/votes/{group_id}と認識されて間違った関数が実行される
+@app.get("/users/me/count/votes",
     response_model=int,
     summary="ユーザーが投票した数を返します",
     tags=["votes"],
