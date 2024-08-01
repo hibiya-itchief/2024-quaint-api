@@ -287,6 +287,12 @@ def test_vote(db):
     response_8 = client.post(url="/votes", params={"group_id":group1.id}, headers=factories.authheader(factories.valid_student_user))
     assert response_8.json() == {"detail":"ゲストまたは保護者である必要があります"}
 
+    response_9 = client.get(url=f"/users/me/votes/{group1.id}", headers=factories.authheader(factories.valid_guest_user))
+    assert response_9.json() == True
+
+    response_10 = client.get(url=f"/users/me/votes/{group2.id}", headers=factories.authheader(factories.valid_guest_user))
+    assert response_10.json() == True
+
 # userが投票可能か
 def test_get_user_votable(db):
     group1 = models.Group(**factories.group1.dict())
