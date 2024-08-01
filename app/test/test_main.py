@@ -83,6 +83,20 @@ def test_get_group_information(db):
     response = client.get(f"/groups/{factories.group1.id}")
     assert response.status_code == 200
 
+def test_update_group(db):
+    crud.create_group(db, factories.group1)
+    crud.create_group(db, factories.group2)
+
+    response_1 = client.put(f"/groups/{factories.group1.id}", json=factories.valid_update_group, headers=factories.authheader(factories.valid_admin_user))
+    assert response_1.status_code == 200
+
+    response_2 = client.put(f"/groups/{factories.group2.id}", json=factories.valid_update_group, headers=factories.authheader(factories.valid_chief_user))
+    assert response_2.status_code == 200
+
+    response_3 = client.put(f"/groups/{factories.group1.id}", json=factories.valid_update_group, headers=factories.authheader(factories.valid_student_user))
+    assert response_3.status_code == 401
+    assert response_3.json() == {"detail":"Admin・当該GroupのOwner・チーフのいずれかの権限が必要です"}
+
 def test_delete_group(db):
     crud.create_group(db, factories.group1)
     response = client.delete(f"/groups/{factories.group1.id}", headers=factories.authheader(factories.valid_admin_user))
