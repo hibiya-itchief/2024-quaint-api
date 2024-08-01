@@ -648,10 +648,11 @@ def create_vote(group_id:str, user:schemas.JWTUser=Depends(auth.get_current_user
     summary="Groupへの投票数を確認",
     tags=["votes"],
     description='### 必要な権限\nAdminまたは当該グループのOwner \n### ログインが必要か\nはい\n',
-    responses={"404":{"description":"- 指定された団体が見つかりません"},"401":{"description":"- Adminまたは当該GroupへのOwnerの権限が必要です"}})
+    responses={"404":{"detail":"指定された団体が見つかりません"},"401":{"detail":"Adminまたはchiefである必要があります"}})
 def get_group_votes(group_id:str,user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
-    if not(auth.check_admin(user) or crud.check_owner_of(db,user,group_id)):
-        raise HTTPException(401,"Adminまたは当該GroupのOwnerの権限が必要です")
+    # auth.check_chiefでadminも通るのでadminかの判定はいらないがわかりやすいようにauth.check_adminも書いておく
+    if not(auth.check_admin(user) or auth.check_chief(user)):
+        raise HTTPException(401,"Adminまたはchiefである必要があります")
     g=crud.get_group_public(db,group_id)
     if g is None:
         raise HTTPException(404,"指定された団体が見つかりません")

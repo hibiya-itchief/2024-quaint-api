@@ -26,7 +26,7 @@ valid_parent_user={
     "groups": [
         "ecd46dae-d84b-42d8-9357-ac24d480a168", # quaint-parents
     ],
-    "name": "adminfortest",
+    "name": "parentfortest",
     "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e2", # random
     "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
 }
@@ -36,7 +36,7 @@ valid_guest_user={
     "groups": [
         "94c45b57-680c-4b5b-a98b-d78f1fd90d71", # quaint-guest
     ],
-    "name": "adminfortest",
+    "name": "guestfortest",
     "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e3", # random
     "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
 }
@@ -50,6 +50,17 @@ valid_admin_user={
     "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e4", # random
     "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
 }
+
+valid_chief_user={
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "67e48f08-22e0-4ec4-9674-1428aaa5c055", # quaint-chief
+    ],
+    "name": "chieffortest",
+    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e7", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
+
 invalid_admin_user1={
     "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
     "groups": [
