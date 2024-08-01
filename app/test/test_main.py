@@ -296,6 +296,13 @@ def test_vote(db):
     response_11 = client.get(url="/users/me/count/votes", headers=factories.authheader(factories.valid_guest_user))
     assert response_11.json() == 2
 
+    response_12 = client.get(url=f"/votes/{group1.id}", headers=factories.authheader(factories.valid_chief_user))
+    assert response_12.status_code == 200
+    assert response_12.json() == {"group_id": group1.id, "votes_num": 2}
+
+    response_13 = client.get(url=f"/votes/{group1.id}", headers=factories.authheader(factories.valid_student_user))
+    assert response_13.json() == {"detail":"Adminまたはchiefである必要があります"}
+
 # userが投票可能か
 def test_get_user_votable(db):
     group1 = models.Group(**factories.group1.dict())
