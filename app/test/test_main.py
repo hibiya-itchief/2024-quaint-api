@@ -293,6 +293,9 @@ def test_vote(db):
     response_10 = client.get(url=f"/users/me/votes/{group2.id}", headers=factories.authheader(factories.valid_guest_user))
     assert response_10.json() == True
 
+    response_11 = client.get(url="/users/me/count/votes", headers=factories.authheader(factories.valid_guest_user))
+    assert response_11.json() == 2
+
 # userが投票可能か
 def test_get_user_votable(db):
     group1 = models.Group(**factories.group1.dict())
