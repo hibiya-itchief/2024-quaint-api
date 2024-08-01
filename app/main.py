@@ -668,14 +668,14 @@ def get_user_votable(user:schemas.JWTUser=Depends(auth.get_current_user),db:Sess
         return True
     return False
 
-@app.get("/users/me/votes/group",
+@app.get("/users/me/votes/{group_id}",
     response_model=bool,
     summary="指定された団体に投票済みかを判定",
     tags=["votes"],
     description="指定された団体に対して投票済みかをbool型で返す"
     )
 def get_user_votable_group(group_id:str, user:schemas.JWTUser=Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
-    return crud.get_user_votable(db,user,group_id)
+    return not crud.get_user_votable(db,user,group_id)
 
 @app.get("/users/me/votes/count",
     response_model=int,
