@@ -100,9 +100,19 @@ def read_root():
     response_model=List[schemas.Ticket],
     summary="ログイン中のユーザーが所有している整理券のリストを取得",
     tags=["users"],
-    description="### 必要な権限\nなし\n### ログインが必要か\nはい")
+    description="### 必要な権限\nなし\n### ログインが必要か\nはい\n###注意 \n状態がcancelledになっているチケットも含めて返ってくる")
 def get_list_of_your_tickets(user:schemas.JWTUser = Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
     return crud.get_list_of_your_tickets(db,user)
+
+@app.get(
+    "/users/me/tickets/active",
+    response_model=List[schemas.Ticket],
+    summary="ログイン中のユーザーが所有しているactive状態のチケットを取得",
+    tags=["users"],
+    description="### 必要な権限\nなし\n### ログインが必要か\nはい\n###注意 \n状態がactiveになっているチケットを返す"
+)
+def get_list_of_your_tickets_active(user:schemas.JWTUser = Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
+    return crud.get_list_of_your_tickets_active(db, user)
 
 @app.get(
     "/users/me/tickets/family",
@@ -619,7 +629,7 @@ def create_vote(group_id:str, user:schemas.JWTUser=Depends(auth.get_current_user
         raise HTTPException(400, "ゲストまたは保護者である必要があります")
     
     # Groupが存在するかの判定も下で兼ねられる
-    tickets:List[schemas.Ticket]=crud.get_list_of_your_tickets(db,user)
+    tickets:List[schemas.Ticket]=crud.get_list_of_your_tickets_active(db,user)
     isVoted = True if crud.get_user_vote_count(db, user) >= 2 else False
     
     if isVoted:
