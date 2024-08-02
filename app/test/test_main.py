@@ -128,6 +128,33 @@ def test_delete_group_tag(db):
     response = client.delete(f"/groups/{factories.group1.id}/tags/{factories.group_tag_create1.tag_id}", headers=factories.authheader(factories.valid_admin_user))
     assert response.status_code == 200
 
+def test_get_group_links(db):
+    crud.create_group(db, factories.group1)
+    crud.add_grouplink(db, factories.group1.id, "https://x.com/", "twitter")
+
+    response = client.get(f"/groups/{factories.group1.id}/links")
+    response.status_code == 200
+
+def test_add_and_delete_grouplinks(db):
+    crud.create_group(db, factories.group1)
+    crud.create_group(db, factories.group2)
+
+    # adminによる追加
+    response_1 = client.post(f"/groups/{factories.group1.id}/links", json={"linktext":"https://x.com/TokyoHibiyaHS", "name":"テスト用リンク１"}, headers=factories.authheader(factories.valid_admin_user))
+    assert response_1.status_code == 200
+
+    # chiefによる追加
+    response_2 = client.post(f"/groups/{factories.group2.id}/links", json={"linktext":"https://x.com/TokyoHibiyaHS", "name":"テスト用リンク１"}, headers=factories.authheader(factories.valid_chief_user))
+    assert response_2.status_code == 200
+
+    # adminによる削除
+    response_3 = client.delete(f"/groups/{factories.group1.id}/links/" + response_1.json()["id"], headers=factories.authheader(factories.valid_admin_user))
+    assert response_3.status_code == 200
+
+    # chiefによる削除
+    response_4 = client.delete(f"/groups/{factories.group2.id}/links/" + response_2.json()["id"], headers=factories.authheader(factories.valid_chief_user))
+    assert response_4.status_code == 200
+
 # events
 
 # tickets
