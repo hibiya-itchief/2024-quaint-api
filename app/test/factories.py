@@ -26,8 +26,8 @@ valid_parent_user={
     "groups": [
         "ecd46dae-d84b-42d8-9357-ac24d480a168", # quaint-parents
     ],
-    "name": "adminfortest",
-    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
+    "name": "parentfortest",
+    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e2", # random
     "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
 }
 
@@ -36,8 +36,8 @@ valid_guest_user={
     "groups": [
         "94c45b57-680c-4b5b-a98b-d78f1fd90d71", # quaint-guest
     ],
-    "name": "adminfortest",
-    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
+    "name": "guestfortest",
+    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e3", # random
     "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
 }
 
@@ -47,16 +47,27 @@ valid_admin_user={
         "5c091517-25de-44bc-9e42-ffcb8539435c", # quaint-admin
     ],
     "name": "adminfortest",
-    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
+    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e4", # random
     "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
 }
+
+valid_chief_user={
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "67e48f08-22e0-4ec4-9674-1428aaa5c055", # quaint-chief
+    ],
+    "name": "chieffortest",
+    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e7", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
+
 invalid_admin_user1={
     "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
     "groups": [
         "5c091517-25de-44bc-9e42-ffcb8539435", # 1 charactor missing
     ],
     "name": "adminfortest",
-    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
+    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e5", # random
     "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
 }
 
@@ -66,7 +77,7 @@ invalid_admin_user2={
         "invaliduuid", # 1 charactor missing
     ],
     "name": "adminfortest",
-    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e1", # random
+    "oid": "25e3cf28-e627-4dfe-b5dd-bdcbe73117e6", # random
     "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
 }
 
@@ -116,6 +127,14 @@ valid_multiple_groups=[
     "floor":2,
     "place":"生徒ホール",
     "type":schemas.GroupType.play}]
+
+valid_update_group = {
+    "title":"あいうえお",
+    "description":"変更",
+    "floor":"2",
+    "place":"科学室",
+    "type":"play"
+}
 
 
 class tag1_TagCreateByAdmin():
@@ -241,6 +260,40 @@ group4 = schemas.GroupCreate(
     private_page_content_url="<html><h1>プライベート</h1></html>",
     floor=4,
     place="33r",
+    type=schemas.GroupType.play
+)
+
+group5 = schemas.GroupCreate(
+    id="11r",
+    groupname="1年1組",
+    title="hatopoppo",
+    description="ここに説明文",
+    enable_vote=True,
+    twitter_url=None,
+    instagram_url=None,
+    stream_url=None,
+    public_thumbnail_image_url=None,
+    public_page_content_url="<html><h1>宣伝ページ</h1></html>",
+    private_page_content_url="<html><h1>プライベート</h1></html>",
+    floor=3,
+    place="11r",
+    type=schemas.GroupType.play
+)
+
+group6 = schemas.GroupCreate(
+    id="21r",
+    groupname="2年1組",
+    title="hatopoppo",
+    description="ここに説明文",
+    enable_vote=True,
+    twitter_url=None,
+    instagram_url=None,
+    stream_url=None,
+    public_thumbnail_image_url=None,
+    public_page_content_url="<html><h1>宣伝ページ</h1></html>",
+    private_page_content_url="<html><h1>プライベート</h1></html>",
+    floor=2,
+    place="21r",
     type=schemas.GroupType.play
 )
 

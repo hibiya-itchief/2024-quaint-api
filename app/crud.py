@@ -55,6 +55,11 @@ def get_list_of_your_tickets(db:Session,user:schemas.JWTUser):
     db_tickets:List[schemas.Ticket] = db.query(models.Ticket).filter(models.Ticket.owner_id==auth.user_object_id(user)).all()
     return db_tickets
 
+# active状態のチケットを取得
+def get_list_of_your_tickets_active(db:Session, user:schemas.JWTUser):
+    db_tickets:List[schemas.Ticket] = db.query(models.Ticket).filter(models.Ticket.owner_id==auth.user_object_id(user), models.Ticket.status == 'active').all()
+    return db_tickets
+
 def count_taken_family_ticket(db:Session, user:schemas.JWTUser) -> int:
     return db.query(models.Ticket).filter(models.Ticket.owner_id==auth.user_object_id(user), models.Ticket.is_family_ticket==True, models.Ticket.status=='active').count()
 
@@ -335,24 +340,57 @@ def delete_tag(db:Session,id:str):
 
 
 # Vote CRUD
-def create_vote(db:Session, groups_id:List[str],user:schemas.JWTUser):
-    for group_id in groups_id:
-        if get_group_public(db, group_id).enable_vote:
-            try:
-                db_vote=models.Vote(id=ulid.new(), user_id=auth.user_object_id(user), group_id=group_id)
-                db.add(db_vote)
-                db.commit()
-                db.refresh(db_vote)
-            except:
-                raise HTTPException(400, f"{group_id}への投票作成中にエラーが発生しました")
-        else:
-            raise HTTPException(400, "投票不可の団体を指定しています")
-    return groups_id
+def create_vote(db:Session, group_id:str, user:schemas.JWTUser) -> schemas.Vote:
+    if get_group_public(db, group_id).enable_vote:
+        try:
+            db_vote=models.Vote(id=ulid.new(), user_id=auth.user_object_id(user), group_id=group_id)
+            created_vote:schemas.Vote = db_vote
+            db.add(db_vote)
+            db.commit()
+            db.refresh(db_vote)
+            return created_vote
+        except:
+            raise HTTPException(400, f"{group_id}への投票作成中にエラーが発生しました")
+    else:
+        raise HTTPException(400, "投票不可の団体を指定しています")
 
-def get_user_vote(db:Session,user:schemas.JWTUser):
-    if db.query(models.Vote).filter(models.Vote.user_id==auth.user_object_id(user)).first():
-        return True
+# ユーザーが指定された団体に対して投票可能かを返す
+# ユーザーが何回投票しているかなどは判定してないので注意
+def get_user_votable(db:Session,user:schemas.JWTUser, group_id) -> bool:
+    # 有効な整理券があるかを判定
+    # group_idに対応するactive状態の整理券を抽出
+    tickets:list[schemas.Ticket] = db.query(models.Ticket).filter(models.Ticket.group_id == group_id, models.Ticket.status == 'active', models.Ticket.owner_id == auth.user_object_id(user)).all()
+
+    # 所有している整理券が公演終了時間を越しているかを判定していく
+    for ticket in tickets:
+        # 整理券に対応するeventを取得
+        event:schemas.Event = db.query(models.Event).get(ticket.event_id)
+
+        if datetime.fromisoformat(event.ends_at) < datetime.now(timezone(timedelta(hours=+9))):
+            # eventの終了時刻が現在の時刻よりも前 -> 整理券は投票に対して有効
+            # 既に投票しているかの判定
+            vote = db.query(models.Vote).filter(models.Vote.group_id == group_id, models.Vote.user_id == auth.user_object_id(user)).first()
+
+            if not vote:
+                # まだ投票していない
+                return True
+    
+    # 上のforの中で return True で終わらなかった -> 有効な整理券がない or 既に投票ずみ
     return False
+
+
+# ユーザーが投票した数を返す
+def get_user_vote_count(db:Session, user:schemas.JWTUser) -> int:
+    return db.query(models.Vote).filter(models.Vote.user_id==auth.user_object_id(user)).count()
+
+def get_user_votes(db:Session, user:schemas.JWTUser) -> List[schemas.Vote]:
+    query = db.query(models.Vote).filter(models.Vote.user_id == auth.user_object_id(user)).all()
+
+    votes:List[schemas.Vote] = []
+    for q in query:
+        votes.append(q)
+
+    return votes
 
 def get_group_votes(db:Session,group:schemas.Group):
     return db.query(models.Vote).filter(models.Vote.group_id==group.id).count()

@@ -100,9 +100,19 @@ def read_root():
     response_model=List[schemas.Ticket],
     summary="ログイン中のユーザーが所有している整理券のリストを取得",
     tags=["users"],
-    description="### 必要な権限\nなし\n### ログインが必要か\nはい")
+    description="### 必要な権限\nなし\n### ログインが必要か\nはい\n###注意 \n状態がcancelledになっているチケットも含めて返ってくる")
 def get_list_of_your_tickets(user:schemas.JWTUser = Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
     return crud.get_list_of_your_tickets(db,user)
+
+@app.get(
+    "/users/me/tickets/active",
+    response_model=List[schemas.Ticket],
+    summary="ログイン中のユーザーが所有しているactive状態のチケットを取得",
+    tags=["users"],
+    description="### 必要な権限\nなし\n### ログインが必要か\nはい\n###注意 \n状態がactiveになっているチケットを返す"
+)
+def get_list_of_your_tickets_active(user:schemas.JWTUser = Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
+    return crud.get_list_of_your_tickets_active(db, user)
 
 @app.get(
     "/users/me/tickets/family",
@@ -235,12 +245,12 @@ def get_group(group_id:str,db:Session=Depends(db.get_db)):
     response_model=schemas.Group,
     summary="Groupを更新",
     tags=['groups'],
-    description="### 必要な権限\nAdminまたは当該グループのOwner\n### ログインが必要か\nはい",
+    description="### 必要な権限\nAdmin・当該グループのOwner・チーフ\n### ログインが必要か\nはい",
     responses={"404":{"description":"指定されたGroupまたはTagが見つかりません"}})
 def update_group(group_id:str,updated_group:schemas.GroupUpdate,user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
     group=crud.get_group_public(db,group_id)
-    if not(auth.check_admin(user) or crud.check_owner_of(db,user,group.id)):
-        raise HTTPException(401,"Adminまたは当該GroupのOwnerの権限が必要です")
+    if not(auth.check_admin(user) or auth.check_chief(user) or crud.check_owner_of(db,user,group.id)):
+        raise HTTPException(401,"Admin・当該GroupのOwner・チーフのいずれかの権限が必要です")
     if not updated_group.public_thumbnail_image_url and group.public_thumbnail_image_url: # サムネイル画像を削除する場合
         blob_storage.delete_image(group.public_thumbnail_image_url)
     u=crud.update_group(db,group,updated_group)
@@ -337,31 +347,38 @@ def get_grouplinks(group_id:str,db:Session=Depends(db.get_db)):
     "/groups/{group_id}/links",
     summary="指定されたGroupにリンクを追加",
     tags=["groups"],
-    description="### 必要な権限\nAdminまたは当該グループのOwner\n### ログインが必要か\nはい",
-    responses={"404":{"description":"指定されたGroupが見つかりません"}}
+    description="### 必要な権限\nAdmin・当該グループのOwner・チーフ\n### ログインが必要か\nはい",
+    responses={"404":{"detail":"指定されたGroupが見つかりません"}}
 )
 def add_grouplink(group_id:str,link:schemas.GroupLinkCreate,user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
     group = crud.get_group_public(db,group_id)
     if not group:
         raise HTTPException(404,"指定されたGroupが見つかりません")
-    if not(auth.check_admin(user) or crud.check_owner_of(db,user,group.id)):
-        raise HTTPException(401,"Adminまたは当該GroupのOwnerの権限が必要です")
+    
+    # check_chiefでadminも通しているのでcheck_adminは本当は必要ないがわかりやすいように残しておく
+    if not(auth.check_admin(user) or auth.check_chief(user) or crud.check_owner_of(db,user,group.id)):
+        raise HTTPException(401,"Admin・当該GroupのOwner・チーフの権限が必要です")
+    
     return crud.add_grouplink(db,group.id,link.linktext,link.name)
 
 @app.delete(
     "/groups/{group_id}/links/{grouplink_id}",
     summary="指定されたGroupのリンクの削除",
     tags=["groups"],
-    description="### 必要な権限\nAdminまたは当該グループのOwner\n### ログインが必要か\nはい",
-    responses={"404":{"description":"指定されたGroupが見つかりません"}}
+    description="### 必要な権限\nAdmin・当該グループのOwner・チーフ\n### ログインが必要か\nはい",
+    responses={"404":{"detail":"指定されたGroupが見つかりません"}}
 )
 def delete_grouplink(group_id:str,grouplink_id:str,user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
     gl:schemas.GroupLink = crud.get_grouplink(db,grouplink_id)
     if not gl:
         raise HTTPException(404,"指定されたGroupLinkが見つかりません")
-    group=crud.get_group_public(db,gl.group_id)  
-    if not(auth.check_admin(user) or crud.check_owner_of(db,user,group.id)):
-        raise HTTPException(401,"Adminまたは当該GroupのOwnerの権限が必要です")
+    group=crud.get_group_public(db,gl.group_id)
+    if not group:
+        raise HTTPException(404,"指定されたGroupが見つかりません")  
+
+    # check_chiefでadminも通しているのでcheck_adminは本当は必要ないがわかりやすいように残しておく
+    if not(auth.check_admin(user) or auth.check_chief(user) or crud.check_owner_of(db,user,group.id)):
+        raise HTTPException(401,"Admin・当該GroupのOwner・チーフの権限が必要です")
     return crud.delete_grouplink(db,grouplink_id)
 
 ### Event Crud
@@ -610,56 +627,81 @@ def chief_delete_ticket(group_id:str,event_id:str,permission:schemas.JWTUser=Dep
 
 ### Vote Crud
 @app.post("/votes",
+    response_model=schemas.Vote,
     summary="投票",
     tags=["votes"],
-    description='### 必要な権限\nなし\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestのみです。一アカウントにつき一回限りです')
-def create_vote(groups_id: List[str], user:schemas.JWTUser=Depends(auth.guest), db:Session=Depends(db.get_db)):
+    description='### 必要な権限\nなし\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestとparentsのみです。一アカウントにつき一回限りです')
+def create_vote(group_id:str, user:schemas.JWTUser=Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
+    if not(auth.check_parents(user) or auth.check_guest(user)):
+        raise HTTPException(400, "ゲストまたは保護者である必要があります")
+    
     # Groupが存在するかの判定も下で兼ねられる
-    tickets:List[schemas.Ticket]=crud.get_list_of_your_tickets(db,user)
-    isVoted=crud.get_user_vote(db,user)
+    isVoted = True if crud.get_user_vote_count(db, user) >= 2 else False
     
     if isVoted:
-        raise HTTPException(400,"投票は1人1回までです")
+        raise HTTPException(400,"投票は1人2回までです")
 
-    if len(groups_id) > 2:
-        raise HTTPException(400, "投票は二団体までです")
+    if not crud.get_user_votable(db, user, group_id):
+        raise HTTPException(400, "すでにその団体に対して投票済みまたは有効な整理券がありません。")
     
-    if(len(groups_id) == 1):
-        filtered_tickets = list(filter(lambda ticket: ticket.group_id == groups_id[0] , tickets))
-    else:
-        filtered_tickets = list(filter(lambda ticket: (ticket.group_id == groups_id[0]) or (ticket.group_id == groups_id[1]), tickets))
-    
-    if len(filtered_tickets) != len(groups_id):
-        raise HTTPException(400,"整理券を取得して観劇した団体にのみ投票できます。")
-    
-    vote = crud.create_vote(db, groups_id, user)
-    return vote
+    return crud.create_vote(db, group_id, user)
 
 @app.get("/votes/{group_id}",
     response_model=schemas.GroupVotesResponse,
     summary="Groupへの投票数を確認",
     tags=["votes"],
     description='### 必要な権限\nAdminまたは当該グループのOwner \n### ログインが必要か\nはい\n',
-    responses={"404":{"description":"- 指定された団体が見つかりません"},"401":{"description":"- Adminまたは当該GroupへのOwnerの権限が必要です"}})
+    responses={"404":{"detail":"指定された団体が見つかりません"},"401":{"detail":"Adminまたはchiefである必要があります"}})
 def get_group_votes(group_id:str,user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
-    if not(auth.check_admin(user) or crud.check_owner_of(db,user,group_id)):
-        raise HTTPException(401,"Adminまたは当該GroupのOwnerの権限が必要です")
+    # auth.check_chiefでadminも通るのでadminかの判定はいらないがわかりやすいようにauth.check_adminも書いておく
+    if not(auth.check_admin(user) or auth.check_chief(user)):
+        raise HTTPException(401,"Adminまたはchiefである必要があります")
     g=crud.get_group_public(db,group_id)
     if g is None:
         raise HTTPException(404,"指定された団体が見つかりません")
     return schemas.GroupVotesResponse(group_id=g.id,votes_num=crud.get_group_votes(db,g))
 
-@app.get("/users/me/votes",
-    response_model=schemas.Vote,
-    summary="userが投票済みかを確認",
+@app.get("/users/me/votable",
+    response_model=bool,
+    summary="userが投票可能かを確認",
     tags=["votes"],
-    description='### 必要な権限\nなし\n### ログインが必要か\nはい\n ### 「重要」未投票の場合は404が返ります',
-    responses={"404":{"description":"まだ投票をしていません"}})
-def get_user_vote(user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
-    v= crud.get_user_vote(db,user)
-    if v is None:
-        raise HTTPException(404,"まだ投票をしていません")
-    return v
+    description='### 必要な権限\nなし\n### ログインが必要か\nはい'
+)
+def get_user_votable(user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
+    if crud.get_user_vote_count(db,user) < 2:
+        return True
+    return False
+
+@app.get("/users/me/votes/{group_id}",
+    response_model=bool,
+    summary="指定された団体に投票可能かを判定",
+    tags=["votes"],
+    description="指定された団体に対して投票可能かを返す\n### 判定項目\n- 整理券の有効性\n- 団体に対して投票済みか\n- 既に投票している回数（2回以上投票している場合投票不可）"
+    )
+def get_user_votable_group(group_id:str, user:schemas.JWTUser=Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
+    if crud.get_user_vote_count(db, user) >= 2:
+        return False
+
+    return crud.get_user_votable(db,user,group_id)
+
+# urlを/users/me/votes/countにすると/users/me/votes/{group_id}と認識されて間違った関数が実行される
+@app.get("/users/me/count/votes",
+    response_model=int,
+    summary="ユーザーが投票した数を返します",
+    tags=["votes"],
+    description="ユーザーが投票した数を返します",
+    )
+def get_user_vote_count(user:schemas.JWTUser=Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
+    return crud.get_user_vote_count(db, user)
+
+@app.get("/users/me/votes",
+    response_model=List[schemas.Vote],
+    summary="userの投票を返す",
+    description="userが投票した投票情報を返す",
+    tags=["votes"]
+    )
+def get_user_votes(user:schemas.JWTUser=Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
+    return crud.get_user_votes(db, user)
 
 
 # Tag

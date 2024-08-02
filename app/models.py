@@ -42,9 +42,8 @@ class Tag(Base):
 class Vote(Base):
     __tablename__ = "votes"
     id = Column(VARCHAR(255),primary_key=True,index=True, unique=True)#ULID
-    user_id = Column(VARCHAR(255), nullable=False)
+    user_id = Column(VARCHAR(255), index=True, nullable=False)
     group_id = Column(VARCHAR(255),ForeignKey("groups.id"),nullable=False)
-
 
 class Group(Base):
     __tablename__ = "groups"
