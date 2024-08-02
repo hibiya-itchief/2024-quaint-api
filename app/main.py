@@ -676,9 +676,12 @@ def get_user_votable(user:schemas.JWTUser=Depends(auth.get_current_user),db:Sess
     response_model=bool,
     summary="指定された団体に投票可能かを判定",
     tags=["votes"],
-    description="指定された団体に対して投票可能かを返す。ただし投票した回数についての判定は行われない。所有している整理券の投票への有効性及び指定された団体に既に投票済みかを判定する。"
+    description="指定された団体に対して投票可能かを返す\n### 判定項目\n- 整理券の有効性\n- 団体に対して投票済みか\n- 既に投票している回数（2回以上投票している場合投票不可）"
     )
 def get_user_votable_group(group_id:str, user:schemas.JWTUser=Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
+    if crud.get_user_vote_count(db, user) >= 2:
+        return False
+
     return crud.get_user_votable(db,user,group_id)
 
 # urlを/users/me/votes/countにすると/users/me/votes/{group_id}と認識されて間違った関数が実行される
