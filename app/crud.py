@@ -357,14 +357,27 @@ def create_vote(db:Session, group_id:str, user:schemas.JWTUser) -> schemas.Vote:
 # ユーザーが指定された団体に対して投票可能かを返す
 # ユーザーが何回投票しているかなどは判定してないので注意
 def get_user_votable(db:Session,user:schemas.JWTUser, group_id) -> bool:
-    vote = db.query(models.Vote).filter(models.Vote.group_id == group_id, models.Vote.user_id == auth.user_object_id(user)).first()
+    # 有効な整理券があるかを判定
+    # group_idに対応するactive状態の整理券を抽出
+    tickets:list[schemas.Ticket] = db.query(models.Ticket).filter(models.Ticket.group_id == group_id, models.Ticket.status == 'active', models.Ticket.owner_id == auth.user_object_id(user)).all()
+
+    # 所有している整理券が公演終了時間を越しているかを判定していく
+    for ticket in tickets:
+        # 整理券に対応するeventを取得
+        event:schemas.Event = db.query(models.Event).get(ticket.event_id)
+
+        if datetime.fromisoformat(event.ends_at) < datetime.now(timezone(timedelta(hours=+9))):
+            # eventの終了時刻が現在の時刻よりも前 -> 整理券は投票に対して有効
+            # 既に投票しているかの判定
+            vote = db.query(models.Vote).filter(models.Vote.group_id == group_id, models.Vote.user_id == auth.user_object_id(user)).first()
+
+            if not vote:
+                # まだ投票していない
+                return True
     
-    if vote:
-        # すでにその団体に投票済み
-        return False
-    else:
-        # まだその団体に投票していない
-        return True
+    # 上のforの中で return True で終わらなかった -> 有効な整理券がない or 既に投票ずみ
+    return False
+
 
 # ユーザーが投票した数を返す
 def get_user_vote_count(db:Session, user:schemas.JWTUser) -> int:

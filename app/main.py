@@ -636,17 +636,13 @@ def create_vote(group_id:str, user:schemas.JWTUser=Depends(auth.get_current_user
         raise HTTPException(400, "ゲストまたは保護者である必要があります")
     
     # Groupが存在するかの判定も下で兼ねられる
-    tickets:List[schemas.Ticket]=crud.get_list_of_your_tickets_active(db,user)
     isVoted = True if crud.get_user_vote_count(db, user) >= 2 else False
     
     if isVoted:
         raise HTTPException(400,"投票は1人2回までです")
 
-    if len(list(filter(lambda ticket: ticket.group_id == group_id , tickets))) == 0:
-        raise HTTPException(400,"整理券を取得して観劇した団体にのみ投票できます。")
-
     if not crud.get_user_votable(db, user, group_id):
-        raise HTTPException(400, "すでにその団体に対して投票済みです")
+        raise HTTPException(400, "すでにその団体に対して投票済みまたは有効な整理券がありません。")
     
     return crud.create_vote(db, group_id, user)
 
@@ -678,12 +674,12 @@ def get_user_votable(user:schemas.JWTUser=Depends(auth.get_current_user),db:Sess
 
 @app.get("/users/me/votes/{group_id}",
     response_model=bool,
-    summary="指定された団体に投票済みかを判定",
+    summary="指定された団体に投票可能かを判定",
     tags=["votes"],
-    description="指定された団体に対して投票済みかをbool型で返す"
+    description="指定された団体に対して投票可能かを返す。ただし投票した回数についての判定は行われない。所有している整理券の投票への有効性及び指定された団体に既に投票済みかを判定する。"
     )
 def get_user_votable_group(group_id:str, user:schemas.JWTUser=Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
-    return not crud.get_user_votable(db,user,group_id)
+    return crud.get_user_votable(db,user,group_id)
 
 # urlを/users/me/votes/countにすると/users/me/votes/{group_id}と認識されて間違った関数が実行される
 @app.get("/users/me/count/votes",

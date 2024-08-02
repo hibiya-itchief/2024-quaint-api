@@ -280,6 +280,23 @@ group5 = schemas.GroupCreate(
     type=schemas.GroupType.play
 )
 
+group6 = schemas.GroupCreate(
+    id="21r",
+    groupname="2年1組",
+    title="hatopoppo",
+    description="ここに説明文",
+    enable_vote=True,
+    twitter_url=None,
+    instagram_url=None,
+    stream_url=None,
+    public_thumbnail_image_url=None,
+    public_page_content_url="<html><h1>宣伝ページ</h1></html>",
+    private_page_content_url="<html><h1>プライベート</h1></html>",
+    floor=2,
+    place="21r",
+    type=schemas.GroupType.play
+)
+
 # 変数
 # テストグループ
 group3 = schemas.GroupCreate(
