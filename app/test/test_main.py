@@ -272,7 +272,7 @@ def test_vote(db):
             starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-1),
             ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-30),
             sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=-1),
-            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-10)
+            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-4)
         )
     events.append(crud.create_event(db, group1.id, group1_event))
 
@@ -283,7 +283,7 @@ def test_vote(db):
             starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-2),
             ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-1, minutes=-30),
             sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=-1),
-            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-10)
+            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-4)
         )
     events.append(crud.create_event(db, group2.id, group2_event))
 
@@ -294,7 +294,7 @@ def test_vote(db):
             starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-3),
             ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-2, minutes=-30),
             sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=-1),
-            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-10)
+            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-4)
         )
     events.append(crud.create_event(db, group3.id, group3_event))
 
@@ -306,37 +306,37 @@ def test_vote(db):
             starts_at=datetime.now(timezone(timedelta(hours=+9))),
             ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=+30),
             sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=-1),
-            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-10)
+            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-4)
         )
     events.append(crud.create_event(db, group4.id, group4_event))
 
     # チケット取得
     # guest チケット作成
-    db_ticket_1 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[0].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active",created_at=(datetime.now(timezone(timedelta(hours=+9))) - timedelta(hours=-5)).isoformat())
+    db_ticket_1 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[0].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active",created_at=(datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-5)).isoformat())
     db.add(db_ticket_1)
     db.commit()
     db.refresh(db_ticket_1)
-    db_ticket_2 = models.Ticket(id=ulid.new().str,group_id=group2.id,event_id=events[1].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active",created_at=(datetime.now(timezone(timedelta(hours=+9))) - timedelta(hours=-5)).isoformat())
+    db_ticket_2 = models.Ticket(id=ulid.new().str,group_id=group2.id,event_id=events[1].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active",created_at=(datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-5)).isoformat())
     db.add(db_ticket_2)
     db.commit()
     db.refresh(db_ticket_2)
-    db_ticket_3 = models.Ticket(id=ulid.new().str, group_id=group3.id, event_id=events[2].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active",created_at=(datetime.now(timezone(timedelta(hours=+9))) - timedelta(hours=-5)).isoformat())
+    db_ticket_3 = models.Ticket(id=ulid.new().str, group_id=group3.id, event_id=events[2].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active",created_at=(datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-5)).isoformat())
     db.add(db_ticket_3)
     db.commit()
     db.refresh(db_ticket_3)
-    db_ticket_4 = models.Ticket(id=ulid.new().str, group_id=group4.id, event_id=events[3].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active", created_at=(datetime.now(timezone(timedelta(hours=+9))) - timedelta(hours=-5)).isoformat())
+    db_ticket_4 = models.Ticket(id=ulid.new().str, group_id=group4.id, event_id=events[3].id, owner_id=factories.valid_guest_user['oid'], person=1, status="active", created_at=(datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-5)).isoformat())
     db.add(db_ticket_4)
     db.commit()
     db.refresh(db_ticket_4)
 
     # parent チケット作成
-    parent_db_ticket_1 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[0].id, owner_id=factories.valid_parent_user['oid'], person=1, status="active",created_at=(datetime.now(timezone(timedelta(hours=+9))) - timedelta(hours=-5)).isoformat())
+    parent_db_ticket_1 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[0].id, owner_id=factories.valid_parent_user['oid'], person=1, status="active",created_at=(datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-5)).isoformat())
     db.add(parent_db_ticket_1)
     db.commit()
     db.refresh(parent_db_ticket_1)
 
     # student チケット作成
-    student_db_ticket_1 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[0].id, owner_id=factories.valid_student_user['oid'], person=1, status="active",created_at=(datetime.now(timezone(timedelta(hours=+9))) - timedelta(hours=-5)).isoformat())
+    student_db_ticket_1 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[0].id, owner_id=factories.valid_student_user['oid'], person=1, status="active",created_at=(datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-5)).isoformat())
     db.add(student_db_ticket_1)
     db.commit()
     db.refresh(student_db_ticket_1)
