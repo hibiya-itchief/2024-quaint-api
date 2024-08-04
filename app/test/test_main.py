@@ -196,6 +196,12 @@ def test_create_family_ticket(db):
     assert response_2.status_code == 200
     response_3 = client.post(f"/groups/{group1.id}/events/{events[2].id}/tickets/family", headers=factories.authheader(factories.valid_parent_user))
     assert response_3.status_code == 404
+    
+    response_4 = client.get("/users/me/tickets/family", headers=factories.authheader(factories.valid_parent_user))
+    assert response_4.json() == True
+
+    response_5 = client.get("/users/me/count/tickets/family", headers=factories.authheader(factories.valid_parent_user))
+    response_5.json() == 2
 
 def test_create_family_ticket_wrong_time(db):
     # 環境変数書き換え
