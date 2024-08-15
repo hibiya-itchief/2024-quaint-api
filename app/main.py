@@ -126,6 +126,16 @@ def is_buy_all_family_ticket(user:schemas.JWTUser = Depends(auth.parents), db:Se
         return True
     return False
 
+@app.get(
+    "/users/me/count/tickets/family",
+    response_model=int,
+    summary="保護者が取得済みの優先券の数を返す",
+    tags=["users"],
+    description="### 必要な権限\n保護者\n### ログインが必要か\nはい"
+)
+def count_taken_family_tickets(user:schemas.JWTUser = Depends(auth.parents), db:Session = Depends(db.get_db)):
+    return crud.count_taken_family_ticket(db, user)
+
 @app.put(
     "/users/{user_sub}/visit",
     summary="ユーザーの入校処理",
