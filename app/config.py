@@ -22,6 +22,7 @@ class Settings(BaseSettings):
 
     # 星陵祭の設定
     family_ticket_sell_starts:str = os.getenv('FAMILY_TICKET_SELL_STARTS')
+    cancel_limit_time:int = os.getenv('CANCEL_TIME_LIMIT')
 
     # Azure Blob Storage
     connect_str:str = os.getenv('AZURE_STORAGE_CONNECTION_STRING')

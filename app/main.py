@@ -571,6 +571,12 @@ def count_tickets(group_id:str,event_id:str,db:Session=Depends(db.get_db)):
     responses={"403":{"description":"指定された整理券の所有者である必要があります"}})
 def delete_ticket(group_id:str,event_id:str,ticket_id:str,user:schemas.JWTUser=Depends(auth.get_current_user),db:Session=Depends(db.get_db)):
     ticket=crud.get_ticket(db,ticket_id)
+
+    # キャンセル時間の判定
+    if not crud.is_able_to_cancel(db, event_id):
+        raise HTTPException(400, f"キャンセル可能な時間は公演開始の{settings.cancel_limit_time}分前までです。")
+
+    # 所有者かの判定
     if not ticket.owner_id==auth.user_object_id(user):
         raise HTTPException(403,"指定された整理券の所有者である必要があります")
     try:
