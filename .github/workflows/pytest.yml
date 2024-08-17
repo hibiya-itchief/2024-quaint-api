@@ -36,6 +36,8 @@ jobs:
           echo BIND-ADDRESS=0.0.0.0 >> ./app/.env
           echo MYSQL_RANDOM_ROOT_PASSWORD=yes >> ./app/.env
           echo MYSQL_DATABASE=quaint-app >> ./app/.env
+          echo FAMILY_TICKET_SELL_STARTS="2024-09-13T00:00:00+09:00" >> ./app/.env
+          echo CANCEL_LIMIT_TIME=20 >> ./app/.env
           docker compose up -d
           sleep 120s
           docker compose exec -T app bash /workspace/wait-for-it.sh db:3306 -t 60 -- pytest ./workspace/app/test --cov --junitxml=/app/app/test/pytest.xml --cov-report=term-missing:skip-covered > ./pytest-coverage.txt
