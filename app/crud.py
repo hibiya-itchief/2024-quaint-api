@@ -280,19 +280,6 @@ def spectest_ticket(group_id:str, event_id:str ,db:Session,user:schemas.JWTUser)
 def get_ticket(db:Session,ticket_id):
     db_ticket:schemas.Ticket = db.query(models.Ticket).filter(models.Ticket.id==ticket_id).first()
     return db_ticket
-
-def is_able_to_cancel(db:Session, event_id) -> bool:
-    event:schemas.Event = db.query(models.Event).filter(models.Event.id == event_id).first()
-
-    # datetimeオブジェクトに文字列から変換
-    starts_time = datetime.fromisoformat(event.starts_at)
-
-    # 公演開始時刻と現在の時刻の差が20分未満　 -> キャンセル不可
-    if (starts_time - datetime.now(timezone(timedelta(hours=+9))) < timedelta(minutes=20)):
-        return False
-    else:
-        return True
-
 def delete_ticket(db:Session,ticket:schemas.Ticket):
     db_ticket=db.query(models.Ticket).filter(models.Ticket.id==ticket.id).first()
     db_ticket.status="cancelled"

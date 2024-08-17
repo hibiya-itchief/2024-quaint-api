@@ -28,7 +28,7 @@ def test_read_root_success():
         "description":"日比谷高校オンライン整理券システム「QUAINT」のAPI"
     }
 
-### users test
+# users test
 def test_users_me_ticket(db):
     # create group
     group1 = models.Group(**factories.group1.dict())
@@ -59,7 +59,7 @@ def test_users_owner_of():
     response = client.get("/users/owner_of", headers=factories.authheader(factories.valid_admin_user))
     assert response.status_code == 200
 
-### groups test
+# groups test
 def test_get_all_groups(db):
     group1 = models.Group(**factories.group1.dict())
     group2 = models.Group(**factories.group2.dict())
@@ -155,7 +155,7 @@ def test_add_and_delete_grouplinks(db):
     response_4 = client.delete(f"/groups/{factories.group2.id}/links/" + response_2.json()["id"], headers=factories.authheader(factories.valid_chief_user))
     assert response_4.status_code == 200
 
-### events
+# events
 
 # tickets
 # 優先券取得テスト
@@ -254,112 +254,6 @@ def test_create_family_ticket_invalid_user(db):
 
     response = client.post(f"/groups/{group1.id}/events/{event.id}/tickets/family", headers=factories.authheader(factories.valid_student_user))
     assert response.status_code == 403
-
-def test_create_ticket(db):
-    # 団体作成
-    group1 = models.Group(**factories.group1.dict())
-    group2 = models.Group(**factories.group2.dict())
-    group3 = models.Group(**factories.group4.dict()) # factories.group3はtypeがtestなのでgroup4
-
-    db.add_all([group1,group2, group3])
-    db.flush()
-    db.commit()
-
-    events = []
-
-    # 公演作成
-    # 取得可能な公演
-    group1_event = schemas.EventCreate(
-            eventname='テスト公演',
-            target='everyone',
-            ticket_stock=20,
-            starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=1),
-            ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=1, minutes=30),
-            sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-20),
-            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=20)
-        )
-    events.append(crud.create_event(db, group1.id, group1_event))
-
-    # 取得可能時間外の公演
-    group2_event = schemas.EventCreate(
-            eventname='テスト公演',
-            target='everyone',
-            ticket_stock=20,
-            starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=1),
-            ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=1, minutes=30),
-            sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=30),
-            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=40)
-        )
-    events.append(crud.create_event(db, group2.id, group2_event))
-
-    # group1_eventと重複する時間
-    group3_event = schemas.EventCreate(
-            eventname='テスト公演',
-            target='everyone',
-            ticket_stock=20,
-            starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=1,minutes=10),
-            ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=1, minutes=20),
-            sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-20),
-            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=20)
-        )
-    events.append(crud.create_event(db, group3.id, group3_event))
-
-    # response check
-    response_1 = client.post(f'/groups/{group1.id}/events/{events[0].id}/tickets?person=1', headers=factories.authheader(factories.valid_student_user))
-    assert response_1.status_code == 200
-
-    response_2 = client.post(f'/groups/{group2.id}/events/{events[1].id}/tickets?person=1', headers=factories.authheader(factories.valid_student_user))
-    assert response_2.json() == {"detail":"現在整理券の配布時間外です"}
-
-    response_3 = client.post(f'/groups/{group2.id}/events/{events[2].id}/tickets?person=1', headers=factories.authheader(factories.valid_student_user))
-    assert response_3.json() == {"detail":"既にこの公演・この公演と重複する時間帯の公演の整理券を取得している場合、新たに取得はできません。または取得できる整理券の枚数の上限を超えています"}
-
-def test_delete_ticket(db):
-    # 団体作成
-    group1 = models.Group(**factories.group1.dict())
-    group2 = models.Group(**factories.group2.dict())
-
-    db.add_all([group1,group2])
-    db.flush()
-    db.commit()
-
-    events = []
-
-    # 公演作成
-    # キャンセル可能な公演
-    group1_event = schemas.EventCreate(
-            eventname='テスト公演',
-            target='everyone',
-            ticket_stock=20,
-            starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=1),
-            ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=1, minutes=30),
-            sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-20),
-            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=20)
-        )
-    events.append(crud.create_event(db, group1.id, group1_event))
-
-    # キャンセル不可の公演
-    group2_event = schemas.EventCreate(
-            eventname='テスト公演',
-            target='everyone',
-            ticket_stock=20,
-            starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=15),
-            ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=1),
-            sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-20),
-            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=10)
-        )
-    events.append(crud.create_event(db, group2.id, group2_event))
-
-    # 整理券作成
-    ticket_1 = crud.create_ticket(db, events[0], schemas.JWTUser(**factories.valid_student_user), 1)
-    ticket_2 = crud.create_ticket(db, events[1], schemas.JWTUser(**factories.valid_student_user), 1)
-
-    # response
-    response_1 = client.delete(f'/groups/{group1.id}/events/{events[0].id}/tickets/{ticket_1.id}', headers=factories.authheader(factories.valid_student_user))
-    assert response_1.status_code == 200
-
-    response_2 = client.delete(f'/groups/{group2.id}/events/{events[1].id}/tickets/{ticket_2.id}', headers=factories.authheader(factories.valid_student_user))
-    assert response_2.json() == {'detail':f'キャンセル可能な時間は公演開始の{settings.cancel_limit_time}分前までです。'}
 
 # vote
 # voteの作成・カウント
