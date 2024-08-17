@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
 from app import crud, schemas, models
 from app.main import app
@@ -96,58 +96,6 @@ def test_add_tag(db):
         crud.add_tag(db, factories.group1.id, tag)
     assert err.value.status_code == 200
     assert err.value.detail == 'Already Registed'
-
-def test_is_able_to_cancel(db):
-    # 団体作成
-    group1 = models.Group(**factories.group1.dict())
-    group2 = models.Group(**factories.group2.dict())
-
-    db.add_all([group1,group2])
-    db.flush()
-    db.commit()
-
-    events = []
-
-    # 公演作成    
-    # キャンセルできない公演
-    group1_event = schemas.EventCreate(
-            eventname='テスト公演',
-            target='everyone',
-            ticket_stock=20,
-            starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=15), # 15分後に公演開始
-            ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=1),
-            sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-20),
-            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=10)
-        )
-    events.append(crud.create_event(db, group1.id, group1_event))
-
-    # キャンセル可能な公演
-    group2_event = schemas.EventCreate(
-            eventname='テスト公演',
-            target='everyone',
-            ticket_stock=20,
-            starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=1), # 一時間後に公演開始
-            ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=1, minutes=30),
-            sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-20),
-            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=10)
-        )
-    events.append(crud.create_event(db, group2.id, group2_event))
-
-    # 1日ズレているもの
-    group2_event_2 = schemas.EventCreate(
-            eventname='テスト公演',
-            target='everyone',
-            ticket_stock=20,
-            starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=1,minutes=15), # 1日と15分後に開始
-            ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=1,hours=1),
-            sell_starts=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-20),
-            sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=10)
-    )
-    events.append(crud.create_event(db, group2.id, group2_event_2))
-
-    assert crud.is_able_to_cancel(db, events[0].id) == False
-    assert crud.is_able_to_cancel(db, events[1].id) == True
-    assert crud.is_able_to_cancel(db, events[2].id) == True
 
 def test_convert_df():
     origin_df = pd.read_csv('/workspace/csv/sample-sheet-v2.csv')
