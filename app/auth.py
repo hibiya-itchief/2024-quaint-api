@@ -273,6 +273,118 @@ def check_parents_18r(user:schemas.JWTUser):
         return True
     else:
         return False
+    
+# 21rの保護者か
+def check_parents_21r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_21r in user.groups):
+        return True
+    else:
+        return False
+    
+# 22rの保護者か
+def check_parents_22r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_22r in user.groups):
+        return True
+    else:
+        return False
+
+# 23rの保護者か
+def check_parents_23r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_23r in user.groups):
+        return True
+    else:
+        return False
+
+# 24rの保護者か
+def check_parents_24r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_24r in user.groups):
+        return True
+    else:
+        return False
+
+# 25rの保護者か
+def check_parents_25r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_25r in user.groups):
+        return True
+    else:
+        return False
+
+# 26rの保護者か
+def check_parents_26r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_26r in user.groups):
+        return True
+    else:
+        return False
+
+# 27rの保護者か
+def check_parents_27r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_27r in user.groups):
+        return True
+    else:
+        return False
+
+# 28rの保護者か
+def check_parents_28r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_28r in user.groups):
+        return True
+    else:
+        return False
+
+# 31rの保護者か
+def check_parents_31r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_31r in user.groups):
+        return True
+    else:
+        return False
+
+# 32rの保護者か
+def check_parents_32r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_32r in user.groups):
+        return True
+    else:
+        return False
+
+# 33rの保護者か
+def check_parents_33r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_33r in user.groups):
+        return True
+    else:
+        return False
+
+# 34rの保護者か
+def check_parents_34r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_34r in user.groups):
+        return True
+    else:
+        return False
+
+# 35rの保護者か
+def check_parents_35r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_35r in user.groups):
+        return True
+    else:
+        return False
+
+# 36rの保護者か
+def check_parents_36r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_36r in user.groups):
+        return True
+    else:
+        return False
+    
+# 37rの保護者か
+def check_parents_37r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_37r in user.groups):
+        return True
+    else:
+        return False
+
+# 38rの保護者か
+def check_parents_38r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_38r in user.groups):
+        return True
+    else:
+        return False
 
 def check_students(user:schemas.JWTUser):
     if check_ad(user) and (user.groups and settings.azure_ad_groups_quaint_students in user.groups):

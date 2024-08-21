@@ -190,17 +190,17 @@ def test_create_family_ticket(db):
         event = crud.create_event(db, group.id, event_create)
         events.append(event)
 
-    response_1 = client.post(f"/groups/{group1.id}/events/{events[0].id}/tickets/family", headers=factories.authheader(factories.valid_parent_user))
+    response_1 = client.post(f"/groups/{group1.id}/events/{events[0].id}/tickets/family", headers=factories.authheader(factories.valid_parent_user_28r))
     assert response_1.status_code == 200
-    response_2 = client.post(f"/groups/{group1.id}/events/{events[1].id}/tickets/family", headers=factories.authheader(factories.valid_parent_user))
+    response_2 = client.post(f"/groups/{group1.id}/events/{events[1].id}/tickets/family", headers=factories.authheader(factories.valid_parent_user_28r))
     assert response_2.status_code == 200
-    response_3 = client.post(f"/groups/{group1.id}/events/{events[2].id}/tickets/family", headers=factories.authheader(factories.valid_parent_user))
-    assert response_3.status_code == 404
+    response_3 = client.post(f"/groups/{group1.id}/events/{events[2].id}/tickets/family", headers=factories.authheader(factories.valid_parent_user_28r))
+    assert response_3.json() == {'detail':'既に保護者用優先券を2枚以上取得しています。'}
     
-    response_4 = client.get("/users/me/tickets/family", headers=factories.authheader(factories.valid_parent_user))
+    response_4 = client.get("/users/me/tickets/family", headers=factories.authheader(factories.valid_parent_user_28r))
     assert response_4.json() == True
 
-    response_5 = client.get("/users/me/count/tickets/family", headers=factories.authheader(factories.valid_parent_user))
+    response_5 = client.get("/users/me/count/tickets/family", headers=factories.authheader(factories.valid_parent_user_28r))
     response_5.json() == 2
 
 def test_create_family_ticket_wrong_time(db):
@@ -226,8 +226,8 @@ def test_create_family_ticket_wrong_time(db):
             )
     event = crud.create_event(db, group1.id, event_create)
 
-    response = client.post(f"/groups/{group1.id}/events/{event.id}/tickets/family", headers=factories.authheader(factories.valid_parent_user))
-    assert response.status_code == 404
+    response = client.post(f"/groups/{group1.id}/events/{event.id}/tickets/family", headers=factories.authheader(factories.valid_parent_user_28r))
+    assert response.json() == {'detail':'現在優先券の配布時間外です'}
 
 def test_create_family_ticket_invalid_user(db):
     # 環境変数書き換え
@@ -252,8 +252,11 @@ def test_create_family_ticket_invalid_user(db):
             )
     event = crud.create_event(db, group1.id, event_create)
 
-    response = client.post(f"/groups/{group1.id}/events/{event.id}/tickets/family", headers=factories.authheader(factories.valid_student_user))
-    assert response.status_code == 403
+    response_1 = client.post(f"/groups/{group1.id}/events/{event.id}/tickets/family", headers=factories.authheader(factories.valid_student_user))
+    assert response_1.status_code == 403
+
+    response_2 = client.post(f"/groups/{group1.id}/events/{event.id}/tickets/family", headers=factories.authheader(factories.valid_parent_user_12r))
+    assert response_2.json() == {'detail':'アカウントが指定された団体に保護者として登録されていません。'}
 
 def test_create_ticket(db):
     # 団体作成
@@ -442,7 +445,7 @@ def test_vote(db):
     db.refresh(db_ticket_4)
 
     # parent チケット作成
-    parent_db_ticket_1 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[0].id, owner_id=factories.valid_parent_user['oid'], person=1, status="active",created_at=(datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-5)).isoformat())
+    parent_db_ticket_1 = models.Ticket(id=ulid.new().str,group_id=group1.id,event_id=events[0].id, owner_id=factories.valid_parent_user_28r['oid'], person=1, status="active",created_at=(datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-5)).isoformat())
     db.add(parent_db_ticket_1)
     db.commit()
     db.refresh(parent_db_ticket_1)
@@ -492,7 +495,7 @@ def test_vote(db):
     assert response_5.json() == {"detail":"投票は1人2回までです"}
 
     # parent 一つ目 正常
-    response_6 = client.post(url="/votes", params={"group_id":group1.id}, headers=factories.authheader(factories.valid_parent_user))
+    response_6 = client.post(url="/votes", params={"group_id":group1.id}, headers=factories.authheader(factories.valid_parent_user_28r))
     assert response_6.status_code == 200
 
     # admin

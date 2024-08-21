@@ -31,6 +31,72 @@ valid_parent_user={
     "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
 }
 
+valid_parent_user_11r = {
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "ecd46dae-d84b-42d8-9357-ac24d480a168", # quaint-parents
+        "12c1a97c-3d99-4c4b-b70b-28e9c0c44652", # 11r-parents
+    ],
+    "name": "11r_parent",
+    "oid": "25e3cf28-e628-5afe-b5dd-bdcbe73117e0", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
+
+valid_parent_user_12r = {
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "ecd46dae-d84b-42d8-9357-ac24d480a168", # quaint-parents
+        "59497287-931a-4c12-84d3-58406988210d", # 12r-parents
+    ],
+    "name": "12r_parent",
+    "oid": "25e3cf28-e628-5afe-b5dd-bdcbe81217e0", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
+
+valid_parent_user_17r = {
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "ecd46dae-d84b-42d8-9357-ac24d480a168", # quaint-parents
+        "7487b933-88f4-4d11-b055-9eee011d917b", # 17r-parents
+    ],
+    "name": "17r_parent",
+    "oid": "16a3cf28-e628-5afe-b5dd-bdcbe81228j9", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
+
+valid_parent_user_21r = {
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "ecd46dae-d84b-42d8-9357-ac24d480a168", # quaint-parents
+        "5be0f149-9d15-472b-b25f-5eb874ace869", # 21r-parents
+    ],
+    "name": "21r_parent",
+    "oid": "35a4cf29-d156-5afe-b5dd-ddabe88887e1", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
+
+valid_parent_user_28r = {
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "ecd46dae-d84b-42d8-9357-ac24d480a168", # quaint-parents
+        "c023ca3d-9618-4950-b2e2-50c064bcbe75", # 28r-parents
+    ],
+    "name": "28r_parent",
+    "oid": "25e3cf29-d156-5afe-b5dd-bdcbe81217e0", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
+
+valid_parent_user_33r = {
+    "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
+    "groups": [
+        "ecd46dae-d84b-42d8-9357-ac24d480a168", # quaint-parents
+        "bcb43367-585d-44a7-9896-36d85aeeda6c", # 33r-parents
+    ],
+    "name": "33r_parent",
+    "oid": "95e2ca38-e628-5afe-b5dd-bdcbe13218e0", # random
+    "sub": "BEGuhvmm8LkWHLxEK9TxDkVaMvK3nDGq6ak79HPGLsd", # random
+}
+
 valid_guest_user={
     "iss": "https://login.microsoftonline.com/158e6d17-f3d5-4365-8428-26dfc74a9d27/v2.0",
     "groups": [
