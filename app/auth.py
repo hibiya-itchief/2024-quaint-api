@@ -207,6 +207,73 @@ def parents(user:schemas.JWTUser=Depends(get_current_user)):
         return user
     else:
         raise HTTPException(HTTP_403_FORBIDDEN,detail="本校保護者である必要があります")
+
+"""
+check_parents_??r(user : schemas.JWTUser)
+判定項目
+- admin
+- 保護者か（quaint-parentsに存在）
+- ??rの保護者か(??r-parentsに存在)
+
+??r-parentsに存在するもののquaint-parentsに存在していない場合があるのでcheck_parentsもつけている
+"""
+
+# 11rの保護者か
+def check_parents_11r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_11r in user.groups):
+        return True
+    else:
+        return False
+
+# 12rの保護者か
+def check_parents_12r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_12r in user.groups):
+        return True
+    else:
+        return False
+
+# 13rの保護者か
+def check_parents_13r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_13r in user.groups):
+        return True
+    else:
+        return False
+
+# 14rの保護者か
+def check_parents_14r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_14r in user.groups):
+        return True
+    else:
+        return False
+
+# 15rの保護者か
+def check_parents_15r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_15r in user.groups):
+        return True
+    else:
+        return False
+
+# 16rの保護者か
+def check_parents_16r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_16r in user.groups):
+        return True
+    else:
+        return False
+    
+# 17rの保護者か
+def check_parents_17r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_17r in user.groups):
+        return True
+    else:
+        return False
+    
+# 18rの保護者か
+def check_parents_18r(user:schemas.JWTUser):
+    if check_ad(user) and check_parents(user) and (user.groups and settings.azure_ad_groups_quaint_parents_18r in user.groups):
+        return True
+    else:
+        return False
+
 def check_students(user:schemas.JWTUser):
     if check_ad(user) and (user.groups and settings.azure_ad_groups_quaint_students in user.groups):
         return True

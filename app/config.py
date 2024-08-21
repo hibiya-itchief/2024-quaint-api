@@ -49,6 +49,19 @@ class Settings(BaseSettings):
     azure_ad_groups_quaint_teachers='0a8ee476-cd37-4c31-bd6e-c34e750574f4'
     azure_ad_groups_quaint_chief='67e48f08-22e0-4ec4-9674-1428aaa5c055'
     azure_ad_groups_quaint_guest='94c45b57-680c-4b5b-a98b-d78f1fd90d71'
+    # 保護者のグループ
+    # 1年
+    azure_ad_groups_quaint_parents_11r = '12c1a97c-3d99-4c4b-b70b-28e9c0c44652'
+    azure_ad_groups_quaint_parents_12r = '59497287-931a-4c12-84d3-58406988210d'
+    azure_ad_groups_quaint_parents_13r = '0ed9e48e-b2a0-4fb6-9045-a266d64a6248'
+    azure_ad_groups_quaint_parents_14r = '1372ce7a-3151-4657-81f2-82ec0c75082e'
+    azure_ad_groups_quaint_parents_15r = '0f860b70-ae51-4663-b69b-a7d972da9037'
+    azure_ad_groups_quaint_parents_16r = 'df919a87-e198-4c9a-9ee5-5c7763aa68c0'
+    azure_ad_groups_quaint_parents_17r = '7487b933-88f4-4d11-b055-9eee011d917b'
+    azure_ad_groups_quaint_parents_18r = 'd2d27aa4-8a2e-43af-843c-aff23bc68310'
+    # 2年
+
+    # 3年
 
     ## JWT EXPIRE
     access_token_expire:datetime.timedelta=datetime.timedelta(days=10)
