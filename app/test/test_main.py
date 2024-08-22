@@ -49,6 +49,14 @@ def test_users_me_ticket(db):
 
     assert response.status_code == 200
 
+def test_get_is_parent_belong_to_correct():
+    response = client.get(f"/users/me/family/belong/{factories.group1.id}", headers=factories.authheader(factories.valid_parent_user_28r))
+    assert response.json() == True
+
+def test_get_is_parent_belong_to_incorrect():
+    response = client.get(f"/users/me/family/belong/{factories.group1.id}", headers=factories.authheader(factories.valid_parent_user_11r))
+    assert response.json() == False
+
 # もっと詳しくやる必要あり
 def test_user_me_owner_of():
     response = client.get("/users/me/owner_of", headers=factories.authheader(factories.valid_admin_user))

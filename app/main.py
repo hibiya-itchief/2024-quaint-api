@@ -115,6 +115,18 @@ def get_list_of_your_tickets_active(user:schemas.JWTUser = Depends(auth.get_curr
     return crud.get_list_of_your_tickets_active(db, user)
 
 @app.get(
+    "/users/me/family/belong/{group_id}",
+    response_model=bool,
+    summary="保護者が指定された団体の保護者として登録されているか",
+    tags=["users"],
+    description="### 必要な権限\n保護者\n### ログインが必要か\nはい"
+)
+def get_is_parent_belong_to(group_id:str, user:schemas.JWTUser = Depends(auth.get_current_user)):
+    if not auth.check_parents(user):
+        raise HTTPException(403,"保護者である必要があります。")
+    return crud.is_parent_belong_to(group_id, user)
+
+@app.get(
     "/users/me/tickets/family",
     response_model=bool,
     summary="保護者がすでに優先券を使い切っているか",
