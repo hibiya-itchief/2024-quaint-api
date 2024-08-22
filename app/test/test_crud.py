@@ -45,6 +45,11 @@ def test_time_overlap():
     end8 = datetime(year=2024, month=9,day=12,hour=10,minute=25)
     assert crud.time_overlap(start7, end7, start8, end8) == False
 
+
+def test_is_parent_belong_to():
+    assert crud.is_parent_belong_to(group_id='11r', user=schemas.JWTUser(**factories.valid_parent_user_11r)) == True
+    assert crud.is_parent_belong_to(group_id='11r', user=schemas.JWTUser(**factories.valid_parent_user_12r)) == False
+
 def test_create_group(db):
     crud.create_group(db, factories.group1)
 

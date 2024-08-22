@@ -115,6 +115,18 @@ def get_list_of_your_tickets_active(user:schemas.JWTUser = Depends(auth.get_curr
     return crud.get_list_of_your_tickets_active(db, user)
 
 @app.get(
+    "/users/me/family/belong/{group_id}",
+    response_model=bool,
+    summary="保護者が指定された団体の保護者として登録されているか",
+    tags=["users"],
+    description="### 必要な権限\n保護者\n### ログインが必要か\nはい"
+)
+def get_is_parent_belong_to(group_id:str, user:schemas.JWTUser = Depends(auth.get_current_user)):
+    if not auth.check_parents(user):
+        raise HTTPException(403,"保護者である必要があります。")
+    return crud.is_parent_belong_to(group_id, user)
+
+@app.get(
     "/users/me/tickets/family",
     response_model=bool,
     summary="保護者がすでに優先券を使い切っているか",
@@ -518,11 +530,15 @@ def create_ticket(group_id:str,event_id:str,person:int,user:schemas.JWTUser=Depe
     response_model=schemas.Ticket,
     summary="家族優先券整理券取得",
     tags=["tickets"],
-    description="### 必要な権限\n生徒の保護者である\n### ログインが必要か\nはい\n### 説明\n整理券取得できる条件\n- 現在時刻が取りたい整理券の優先券配布時間内\n- 当該公演の整理券在庫が余っている\n- ユーザーは既にこの整理券を取得していない\n- ユーザーは既に当該公演と同じ時間帯の公演の整理券を取得していない\n- 同時入場人数は1名まで(***Azure ADのアカウントは1人という制約は無くしました***)",
+    description="### 必要な権限\n生徒の保護者である\n### ログインが必要か\nはい\n### 説明\n整理券取得できる条件\n- 現在時刻が取りたい整理券の優先券配布時間内\n- 当該公演の整理券在庫が余っている\n- ユーザーは既にこの整理券を取得していない\n- ユーザーは既に当該公演と同じ時間帯の公演の整理券を取得していない\n- 同時入場人数は1名まで(***Azure ADのアカウントは1人という制約は無くしました***)\n- 保護者がそのクラスの保護者として登録されている",
     responses={"404":{"description":"- 指定されたGroupまたはEventが見つかりません\n- 既にこの公演・この公演と同じ時間帯の公演の整理券を取得している場合、新たに取得はできません\n- この公演の整理券は売り切れています\n- 現在整理券の配布時間外です"},
         "400":{"description":"- 同時入場人数は3人まで(***Azure ADのアカウントは1人という制約は無くしました***)です\n- 校内への来場処理をしたユーザーのみが整理券を取得できます"}})
-def create_family_ticket(group_id:str,event_id:str,user:schemas.JWTUser=Depends(auth.parents), db:Session=Depends(db.get_db)):
+def create_family_ticket(group_id:str,event_id:str,user:schemas.JWTUser=Depends(auth.get_current_user), db:Session=Depends(db.get_db)):
     event = crud.get_event(db,event_id)
+    
+    # チェック
+    if not crud.is_parent_belong_to(group_id=group_id, user=user):
+        raise HTTPException(403, "アカウントが指定された団体に保護者として登録されていません。")
     if not event:
         raise HTTPException(404,"指定されたGroupまたはEventが見つかりません")
     if not auth.check_role(event.target,user):

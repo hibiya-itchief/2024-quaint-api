@@ -21,6 +21,65 @@ def time_overlap(start1:datetime,end1:datetime,start2:datetime,end2:datetime)->b
         return True
     else:
         return False
+    
+"""
+指定されたgroup_idのクラスに与えられたuser（保護者）が所属しているか
+- 所属している -> True
+- 所属していない -> False
+
+ゴリ押しで書いたけどfor文使って綺麗に収めればよかったなと思います。修正したい人はぜひ
+"""
+def is_parent_belong_to(group_id:str, user:schemas.JWTUser):
+    if group_id == '11r':
+        return auth.check_parents_11r(user)
+    elif group_id == '12r':
+        return auth.check_parents_12r(user)
+    elif group_id == '13r':
+        return auth.check_parents_13r(user)
+    elif group_id == '14r':
+        return auth.check_parents_14r(user)
+    elif group_id == '15r':
+        return auth.check_parents_15r(user)
+    elif group_id == '16r':
+        return auth.check_parents_16r(user)
+    elif group_id == '17r':
+        return auth.check_parents_17r(user)
+    elif group_id == '18r':
+        return auth.check_parents_18r(user)
+    elif group_id == '21r':
+        return auth.check_parents_21r(user)
+    elif group_id == '22r':
+        return auth.check_parents_22r(user)
+    elif group_id == '23r':
+        return auth.check_parents_23r(user)
+    elif group_id == '24r':
+        return auth.check_parents_24r(user)
+    elif group_id == '25r':
+        return auth.check_parents_25r(user)
+    elif group_id == '26r':
+        return auth.check_parents_26r(user)
+    elif group_id == '27r':
+        return auth.check_parents_27r(user)
+    elif group_id == '28r':
+        return auth.check_parents_28r(user)
+    elif group_id == '31r':
+        return auth.check_parents_31r(user)
+    elif group_id == '32r':
+        return auth.check_parents_32r(user)
+    elif group_id == '33r':
+        return auth.check_parents_33r(user)
+    elif group_id == '34r':
+        return auth.check_parents_34r(user)
+    elif group_id == '35r':
+        return auth.check_parents_35r(user)
+    elif group_id == '36r':
+        return auth.check_parents_36r(user)
+    elif group_id == '37r':
+        return auth.check_parents_37r(user)
+    elif group_id == '38r':
+        return auth.check_parents_38r(user)
+    else:
+        return False
 
 def grant_ownership(db:Session,group:schemas.Group,user_oid:str,note:Union[str,None])->schemas.GroupOwner:
     db_groupowner=models.GroupOwner(group_id=group.id,user_id=user_oid,note=note)
