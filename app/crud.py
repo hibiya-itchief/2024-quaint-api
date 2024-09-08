@@ -378,6 +378,30 @@ def delete_events(db: Session, event: schemas.Event):
     db.commit()
 
 
+def get_all_active_tickets_of_event(db, event_id) -> List[str]:
+    """指定されたイベントに対するすべてのアクティブ状態の整理券のIDを返す
+
+    Args:
+        db (_type_): Session
+        event_id (_type_): イベントのID
+
+    Returns:
+        List[str]:すべての整理券IDが格納されたリスト
+    """
+
+    db_tickets = (
+        db.query(models.Ticket)
+        .filter(models.Ticket.event_id == event_id, models.Ticket.status == "active")
+        .all()
+    )
+
+    tickets = []
+    for db_ticket in db_tickets:
+        tickets.append(db_ticket.id)
+
+    return tickets
+
+
 ## Ticket CRUD
 def count_tickets_for_event(db: Session, event: schemas.Event) -> int:
     res = (

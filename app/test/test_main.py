@@ -250,10 +250,84 @@ def test_add_and_delete_grouplinks(db):
     assert response_4.status_code == 200
 
 
-# events
+### events
+def test_get_all_active_tickets_of_event(db):
+    # 団体作成
+    group1 = models.Group(**factories.group1.dict())
+    db.add(group1)
+    db.commit()
+    db.refresh(group1)
+
+    # 公演作成
+    event_create = schemas.EventCreate(
+        eventname="テスト公演",
+        target="everyone",
+        ticket_stock=20,
+        starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=2),
+        ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=3),
+        sell_starts=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(minutes=-10),
+        sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=10),
+    )
+    event = crud.create_event(db, group1.id, event_create)
+
+    # activeなチケットを作成
+    ticket_1 = models.Ticket(
+        id=ulid.new().str,
+        group_id=group1.id,
+        event_id=event.id,
+        owner_id=factories.valid_student_user["oid"],
+        person=1,
+        status="active",
+        is_family_ticket=False,
+        created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat(),
+    )
+    db.add(ticket_1)
+    db.commit()
+    db.refresh(ticket_1)
+
+    ticket_2 = models.Ticket(
+        id=ulid.new().str,
+        group_id=group1.id,
+        event_id=event.id,
+        owner_id=factories.valid_student_user["oid"],
+        person=1,
+        status="active",
+        is_family_ticket=False,
+        created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat(),
+    )
+    db.add(ticket_2)
+    db.commit()
+    db.refresh(ticket_2)
+
+    ticket_3 = models.Ticket(
+        id=ulid.new().str,
+        group_id=group1.id,
+        event_id=event.id,
+        owner_id=factories.valid_student_user["oid"],
+        person=1,
+        status="cancelled",
+        is_family_ticket=False,
+        created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat(),
+    )
+    db.add(ticket_3)
+    db.commit()
+    db.refresh(ticket_3)
+
+    res = client.get(
+        f"/groups/{group1.id}/events/{event.id}/tickets/active",
+        headers=factories.authheader(factories.valid_student_user),
+    )
+    assert res.json() == [ticket_1.id, ticket_2.id]
+
+    invalid_user_res = client.get(
+        f"/groups/{group1.id}/events/{event.id}/tickets/active",
+        headers=factories.authheader(factories.valid_guest_user),
+    )
+    assert invalid_user_res.status_code != 200
 
 
-# tickets
+### tickets
 # 優先券取得テスト
 # 時間は正しい場合
 def test_create_family_ticket(db):
