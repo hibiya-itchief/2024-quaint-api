@@ -188,7 +188,10 @@ def test_event_all_tickets_active(db):
     db.commit()
     db.refresh(ticket_3)
 
-    assert crud.get_all_active_tickets_of_event(db, event.id) == [ticket_1.id, ticket_2]
+    assert crud.get_all_active_tickets_of_event(db, event.id) == [
+        ticket_1.id,
+        ticket_2.id,
+    ]
 
 
 def test_convert_df():
