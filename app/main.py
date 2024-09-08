@@ -670,6 +670,23 @@ def delete_events(
         raise HTTPException(400, "既に整理券が取得されている公演は削除できません")
 
 
+@app.get(
+    "/groups/{group_id}/events/{event_id}/tickets/active",
+    summary="指定されたイベントに対するすべてのアクティブ状態の整理券IDを返す",
+    tags=["events"],
+    description="### 必要な権限\nstudents\n### ログインが必要か\nはい\n### 説明\n指定された公演に対するすべてのアクティブ状態の整理券のIDを返します",
+)
+def get_all_active_tickets_of_event(
+    group_id: str,
+    event_id: str,
+    user: schemas.JWTUser = Depends(auth.get_current_user),
+    db: Session = Depends(db.get_db),
+):
+    if not auth.check_students(user):
+        raise HTTPException(403, "生徒である必要があります。")
+    return crud.get_all_active_tickets_of_event(db, event_id)
+
+
 ### Ticket CRUD
 @app.post(
     "/spectest/groups/{group_id}/events/{event_id}/tickets",
