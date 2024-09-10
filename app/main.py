@@ -903,17 +903,17 @@ def get_ticket(
     response_model=schemas.Ticket,
     summary="指定された整理券をもぎる",
     tags=["tickets"],
-    description="### 必要な権限\nschool(暫定)\n### ログインが必要か\nはい\n### 説明\n総当たり攻撃を防ぐため、指定された整理券は存在するが権限が無い場合も404を返す",
+    description="### 必要な権限\nschool\n### ログインが必要か\nはい\n### 説明\n総当たり攻撃を防ぐため、指定された整理券は存在するが権限が無い場合も404を返す",
 )
 def use_ticket(
     ticket_id: str,
     permission: schemas.JWTUser = Depends(auth.school),
     db: Session = Depends(db.get_db),
 ):
-    result = crud.use_ticket(db, ticket_id)
-    if not result:
-        raise HTTPException(404, "指定された整理券が見つかりません")
-    return result
+    if crud.check_ticket_available(db, ticket_id):
+        result = crud.use_ticket(db, ticket_id)
+        return result
+    raise HTTPException(404, "整理券は使用済み、または存在しません。")
 
 
 @app.post(
@@ -982,7 +982,7 @@ def check_ticket_available(
     response_model=schemas.Vote,
     summary="投票",
     tags=["votes"],
-    description="### 必要な権限\nなし\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestとparentsのみです。一アカウントにつき一回限りです",
+    description="### 必要な権限\nparents, guest\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestとparentsのみです。一アカウントにつき一回限りです",
 )
 def create_vote(
     group_id: str,
