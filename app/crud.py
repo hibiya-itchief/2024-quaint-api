@@ -649,12 +649,12 @@ def create_vote(db: Session, group_id: str, user: schemas.JWTUser) -> schemas.Vo
 # ユーザーが何回投票しているかなどは判定してないので注意
 def get_user_votable(db: Session, user: schemas.JWTUser, group_id) -> bool:
     # 有効な整理券があるかを判定
-    # group_idに対応するactive状態の整理券を抽出
+    # group_idに対応するactive/used状態の整理券を抽出
     tickets: list[schemas.Ticket] = (
         db.query(models.Ticket)
         .filter(
             models.Ticket.group_id == group_id,
-            models.Ticket.status == "active",
+            or_(models.Ticket.status == "active", models.Ticket.status == "used"),
             models.Ticket.owner_id == auth.user_object_id(user),
         )
         .all()

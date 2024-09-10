@@ -982,7 +982,7 @@ def check_ticket_available(
     response_model=schemas.Vote,
     summary="投票",
     tags=["votes"],
-    description="### 必要な権限\nなし\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestとparentsのみです。一アカウントにつき一回限りです",
+    description="### 必要な権限\nparents, guest\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestとparentsのみです。一アカウントにつき一回限りです",
 )
 def create_vote(
     group_id: str,

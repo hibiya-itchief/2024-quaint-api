@@ -699,7 +699,7 @@ def test_vote(db):
         event_id=events[0].id,
         owner_id=factories.valid_guest_user["oid"],
         person=1,
-        status="active",
+        status="used",
         created_at=(
             datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-5)
         ).isoformat(),
