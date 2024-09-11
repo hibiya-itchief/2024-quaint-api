@@ -803,23 +803,16 @@ def create_family_ticket(
             HTTP_403_FORBIDDEN, "この公演は整理券を取得できる人が制限されています。"
         )
 
+    # 優先券配布開始時間よりも現在時刻が後
     if datetime.fromisoformat(settings.family_ticket_sell_starts) < datetime.now(
         timezone(timedelta(hours=+9))
     ):
-        qualified: bool = crud.check_qualified_for_ticket(db, event, user)
-        if (
-            crud.count_tickets_for_event(db, event) + 1 <= event.ticket_stock
-            and qualified
-        ):  ##まだチケットが余っていて、同時間帯の公演の整理券取得ではない
+        # チケットがまだ余っている
+        if crud.count_tickets_for_event(db, event) + 1 <= event.ticket_stock:
             if crud.count_taken_family_ticket(db, user) < 2:
                 return crud.create_ticket(db, event, user, 1, True)
             else:
                 raise HTTPException(404, "既に保護者用優先券を2枚以上取得しています。")
-        elif not qualified:
-            raise HTTPException(
-                404,
-                "既にこの公演・この公演と重複する時間帯の公演の整理券を取得している場合、新たに取得はできません。",
-            )
         else:
             raise HTTPException(404, "この公演の整理券は売り切れています")
     else:
