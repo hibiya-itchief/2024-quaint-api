@@ -989,10 +989,7 @@ def create_vote(
     user: schemas.JWTUser = Depends(auth.get_current_user),
     db: Session = Depends(db.get_db),
 ):
-    # 9/12日負荷テストに向けてschool投票できるように
-    if not (
-        auth.check_parents(user) or auth.check_guest(user) or auth.check_school(user)
-    ):
+    if not (auth.check_parents(user) or auth.check_guest(user)):
         raise HTTPException(400, "ゲストまたは保護者である必要があります")
 
     # Groupが存在するかの判定も下で兼ねられる
