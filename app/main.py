@@ -803,23 +803,16 @@ def create_family_ticket(
             HTTP_403_FORBIDDEN, "この公演は整理券を取得できる人が制限されています。"
         )
 
+    # 優先券配布開始時間よりも現在時刻が後
     if datetime.fromisoformat(settings.family_ticket_sell_starts) < datetime.now(
         timezone(timedelta(hours=+9))
     ):
-        qualified: bool = crud.check_qualified_for_ticket(db, event, user)
-        if (
-            crud.count_tickets_for_event(db, event) + 1 <= event.ticket_stock
-            and qualified
-        ):  ##まだチケットが余っていて、同時間帯の公演の整理券取得ではない
+        # チケットがまだ余っている
+        if crud.count_tickets_for_event(db, event) + 1 <= event.ticket_stock:
             if crud.count_taken_family_ticket(db, user) < 2:
                 return crud.create_ticket(db, event, user, 1, True)
             else:
                 raise HTTPException(404, "既に保護者用優先券を2枚以上取得しています。")
-        elif not qualified:
-            raise HTTPException(
-                404,
-                "既にこの公演・この公演と重複する時間帯の公演の整理券を取得している場合、新たに取得はできません。",
-            )
         else:
             raise HTTPException(404, "この公演の整理券は売り切れています")
     else:
@@ -903,17 +896,17 @@ def get_ticket(
     response_model=schemas.Ticket,
     summary="指定された整理券をもぎる",
     tags=["tickets"],
-    description="### 必要な権限\nschool(暫定)\n### ログインが必要か\nはい\n### 説明\n総当たり攻撃を防ぐため、指定された整理券は存在するが権限が無い場合も404を返す",
+    description="### 必要な権限\nschool\n### ログインが必要か\nはい\n### 説明\n総当たり攻撃を防ぐため、指定された整理券は存在するが権限が無い場合も404を返す",
 )
 def use_ticket(
     ticket_id: str,
     permission: schemas.JWTUser = Depends(auth.school),
     db: Session = Depends(db.get_db),
 ):
-    result = crud.use_ticket(db, ticket_id)
-    if not result:
-        raise HTTPException(404, "指定された整理券が見つかりません")
-    return result
+    if crud.check_ticket_available(db, ticket_id):
+        result = crud.use_ticket(db, ticket_id)
+        return result
+    raise HTTPException(404, "整理券は使用済み、または存在しません。")
 
 
 @app.post(
@@ -982,7 +975,7 @@ def check_ticket_available(
     response_model=schemas.Vote,
     summary="投票",
     tags=["votes"],
-    description="### 必要な権限\nなし\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestとparentsのみです。一アカウントにつき一回限りです",
+    description="### 必要な権限\nparents, guest\n### ログインが必要か\nはい\n### 説明\n- 投票できるのはguestとparentsのみです。一アカウントにつき一回限りです",
 )
 def create_vote(
     group_id: str,

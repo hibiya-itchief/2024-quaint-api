@@ -398,6 +398,48 @@ def test_create_family_ticket(db):
     response_5.json() == 2
 
 
+def test_create_family_ticket_same_event(db):
+    # 環境変数書き換え
+    # テスト実行後に変数は元の値に戻してくれるみたい
+    settings.family_ticket_sell_starts = (
+        datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=-1)
+    ).isoformat()
+
+    # 団体作成
+    group1 = models.Group(**factories.group1.dict())
+    db.add(group1)
+    db.commit()
+    db.refresh(group1)
+
+    # 公演作成
+    event_create = schemas.EventCreate(
+        eventname="テスト公演",
+        target="everyone",
+        ticket_stock=20,
+        starts_at=datetime.now(timezone(timedelta(hours=+10)))
+        + timedelta(days=2),  # 優先券以外では取得不可の時間設定
+        ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=3),
+        sell_starts=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(days=+1, hours=+0),
+        sell_ends=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(days=+1, hours=+1),
+    )
+    event = crud.create_event(db, group1.id, event_create)
+
+    response_1 = client.post(
+        f"/groups/{group1.id}/events/{event.id}/tickets/family",
+        headers=factories.authheader(factories.valid_parent_user_28r),
+    )
+
+    response_2 = client.post(
+        f"/groups/{group1.id}/events/{event.id}/tickets/family",
+        headers=factories.authheader(factories.valid_parent_user_28r),
+    )
+
+    assert response_1.status_code == 200
+    assert response_2.status_code == 200
+
+
 def test_create_family_ticket_wrong_time(db):
     # 環境変数書き換え
     # テスト実行後に変数は元の値に戻してくれるみたい
@@ -474,6 +516,89 @@ def test_create_family_ticket_invalid_user(db):
     assert response_2.json() == {
         "detail": "アカウントが指定された団体に保護者として登録されていません。"
     }
+
+
+def test_change_ticket_used(db):
+    # 団体作成
+    group1 = models.Group(**factories.group1.dict())
+    db.add(group1)
+    db.commit()
+    db.refresh(group1)
+
+    # 公演作成
+    event_create = schemas.EventCreate(
+        eventname="テスト公演",
+        target="everyone",
+        ticket_stock=20,
+        starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=2),
+        ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=3),
+        sell_starts=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(minutes=-10),
+        sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=10),
+    )
+    event = crud.create_event(db, group1.id, event_create)
+
+    # activeなチケットを作成
+    ticket_1 = models.Ticket(
+        id=ulid.new().str,
+        group_id=group1.id,
+        event_id=event.id,
+        owner_id=factories.valid_student_user["oid"],
+        person=1,
+        status="active",
+        is_family_ticket=False,
+        created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat(),
+    )
+    db.add(ticket_1)
+    db.commit()
+    db.refresh(ticket_1)
+
+    # キャンセル状態のチケットを作成
+    ticket_2 = models.Ticket(
+        id=ulid.new().str,
+        group_id=group1.id,
+        event_id=event.id,
+        owner_id=factories.valid_student_user["oid"],
+        person=1,
+        status="cancelled",
+        is_family_ticket=False,
+        created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat(),
+    )
+    db.add(ticket_2)
+    db.commit()
+    db.refresh(ticket_2)
+
+    # usedのチケットを作成
+    ticket_3 = models.Ticket(
+        id=ulid.new().str,
+        group_id=group1.id,
+        event_id=event.id,
+        owner_id=factories.valid_student_user["oid"],
+        person=1,
+        status="used",
+        is_family_ticket=False,
+        created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat(),
+    )
+    db.add(ticket_3)
+    db.commit()
+    db.refresh(ticket_3)
+
+    response_1 = client.put(
+        f"/tickets/{ticket_1.id}",
+        headers=factories.authheader(factories.valid_student_user),
+    )
+    response_2 = client.put(
+        f"/tickets/{ticket_2.id}",
+        headers=factories.authheader(factories.valid_student_user),
+    )
+    response_3 = client.put(
+        f"/tickets/{ticket_3.id}",
+        headers=factories.authheader(factories.valid_student_user),
+    )
+
+    assert response_1.status_code == 200
+    assert response_2.status_code == 404
+    assert response_3.status_code == 404
 
 
 def test_check_ticket_available(db):
@@ -616,7 +741,7 @@ def test_vote(db):
         event_id=events[0].id,
         owner_id=factories.valid_guest_user["oid"],
         person=1,
-        status="active",
+        status="used",
         created_at=(
             datetime.now(timezone(timedelta(hours=+9))) + timedelta(hours=-5)
         ).isoformat(),

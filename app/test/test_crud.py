@@ -259,6 +259,35 @@ def test_create_events_from_df(db):
 
 
 ### tickets
+def test_use_ticket(db):
+    # 団体作成
+    group1 = models.Group(**factories.group1.dict())
+    db.add(group1)
+    db.commit()
+    db.refresh(group1)
+
+    # 公演作成
+    event_create = schemas.EventCreate(
+        eventname="テスト公演",
+        target="everyone",
+        ticket_stock=20,
+        starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=2),
+        ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=3),
+        sell_starts=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(minutes=-10),
+        sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=10),
+    )
+    event = crud.create_event(db, group1.id, event_create)
+
+    # activeなチケットを作成
+    ticket_1 = crud.create_ticket(
+        db, event, schemas.JWTUser(**factories.valid_student_user), 1
+    )
+
+    assert crud.use_ticket(db, ticket_1.id).status == "used"
+    assert crud.use_ticket(db, "aaaa") == None
+
+
 def test_check_ticket_available(db):
     # 団体作成
     group1 = models.Group(**factories.group1.dict())
@@ -283,10 +312,6 @@ def test_check_ticket_available(db):
     ticket_1 = crud.create_ticket(
         db, event, schemas.JWTUser(**factories.valid_student_user), 1
     )
-    assert crud.check_ticket_available(db, ticket_1.id) == True
-
-    # 存在しないチケットを参照
-    assert crud.check_ticket_available(db, "aaaaaaaa") == False
 
     # キャンセル状態のチケットを作成
     ticket_2 = models.Ticket(
@@ -302,4 +327,184 @@ def test_check_ticket_available(db):
     db.add(ticket_2)
     db.commit()
     db.refresh(ticket_2)
-    assert crud.check_ticket_available(db, ticket_2.id) == False
+
+    # キャンセル状態のチケットを作成
+    ticket_3 = models.Ticket(
+        id=ulid.new().str,
+        group_id=group1.id,
+        event_id=event.id,
+        owner_id=factories.valid_student_user["oid"],
+        person=1,
+        status="used",
+        is_family_ticket=False,
+        created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat(),
+    )
+    db.add(ticket_3)
+    db.commit()
+    db.refresh(ticket_3)
+
+    assert crud.check_ticket_available(db, ticket_1.id) == True
+    # 存在しないチケットを参照
+    assert crud.check_ticket_available(db, "aaaaaaaa") == False
+    assert crud.check_ticket_available(db, ticket_3.id) == False
+
+
+### votes
+def test_get_user_votable(db):
+    group1 = models.Group(**factories.group1.dict())
+    db.add(group1)
+    db.commit()
+    db.refresh(group1)
+
+    group2 = models.Group(**factories.group2.dict())
+    db.add(group2)
+    db.commit()
+    db.refresh(group2)
+
+    # 公演作成
+    group1_event_create = schemas.EventCreate(
+        eventname="テスト公演",
+        target="everyone",
+        ticket_stock=20,
+        starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-30),
+        ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-10),
+        sell_starts=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(minutes=-50),
+        sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-40),
+    )
+    group1_event = crud.create_event(db, group1.id, group1_event_create)
+
+    group2_event_create = schemas.EventCreate(
+        eventname="テスト公演",
+        target="everyone",
+        ticket_stock=20,
+        starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-30),
+        ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-10),
+        sell_starts=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(minutes=-50),
+        sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-40),
+    )
+    group2_event = crud.create_event(db, group2.id, group2_event_create)
+
+    # activeなチケットを作成
+    ticket_1 = models.Ticket(
+        id=ulid.new().str,
+        group_id=group1.id,
+        event_id=group1_event.id,
+        owner_id=factories.valid_student_user["oid"],
+        person=1,
+        status="active",
+        is_family_ticket=False,
+        created_at=(
+            datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-45)
+        ).isoformat(),
+    )
+    db.add(ticket_1)
+    db.commit()
+    db.refresh(ticket_1)
+
+    # used状態のチケットを作成
+    ticket_2 = models.Ticket(
+        id=ulid.new().str,
+        group_id=group2.id,
+        event_id=group2_event.id,
+        owner_id=factories.valid_student_user["oid"],
+        person=1,
+        status="used",
+        is_family_ticket=False,
+        created_at=(
+            datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-45)
+        ).isoformat(),
+    )
+    db.add(ticket_2)
+    db.commit()
+    db.refresh(ticket_2)
+
+    assert (
+        crud.get_user_votable(
+            db, schemas.JWTUser(**factories.valid_student_user), group1.id
+        )
+        == True
+    )
+    assert (
+        crud.get_user_votable(
+            db, schemas.JWTUser(**factories.valid_student_user), group2.id
+        )
+        == True
+    )
+
+
+def test_get_user_vote_count(db):
+    group1 = models.Group(**factories.group1.dict())
+    db.add(group1)
+    db.commit()
+    db.refresh(group1)
+
+    group2 = models.Group(**factories.group2.dict())
+    db.add(group2)
+    db.commit()
+    db.refresh(group2)
+
+    # 公演作成
+    group1_event_create = schemas.EventCreate(
+        eventname="テスト公演",
+        target="everyone",
+        ticket_stock=20,
+        starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-30),
+        ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-10),
+        sell_starts=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(minutes=-50),
+        sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-40),
+    )
+    group1_event = crud.create_event(db, group1.id, group1_event_create)
+
+    group2_event_create = schemas.EventCreate(
+        eventname="テスト公演",
+        target="everyone",
+        ticket_stock=20,
+        starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-30),
+        ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-10),
+        sell_starts=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(minutes=-50),
+        sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-40),
+    )
+    group2_event = crud.create_event(db, group2.id, group2_event_create)
+
+    # activeなチケットを作成
+    ticket_1 = models.Ticket(
+        id=ulid.new().str,
+        group_id=group1.id,
+        event_id=group1_event.id,
+        owner_id=factories.valid_student_user["oid"],
+        person=1,
+        status="active",
+        is_family_ticket=False,
+        created_at=(
+            datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-45)
+        ).isoformat(),
+    )
+    db.add(ticket_1)
+    db.commit()
+    db.refresh(ticket_1)
+
+    # used状態のチケットを作成
+    ticket_2 = models.Ticket(
+        id=ulid.new().str,
+        group_id=group2.id,
+        event_id=group2_event.id,
+        owner_id=factories.valid_student_user["oid"],
+        person=1,
+        status="used",
+        is_family_ticket=False,
+        created_at=(
+            datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=-45)
+        ).isoformat(),
+    )
+    db.add(ticket_2)
+    db.commit()
+    db.refresh(ticket_2)
+
+    crud.create_vote(db, group1.id, schemas.JWTUser(**factories.valid_student_user))
+    crud.create_vote(db, group2.id, schemas.JWTUser(**factories.valid_student_user))
+
+    assert crud.get_user_vote_count(db, schemas.JWTUser(**factories.valid_student_user))
