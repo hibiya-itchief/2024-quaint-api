@@ -398,6 +398,48 @@ def test_create_family_ticket(db):
     response_5.json() == 2
 
 
+def test_create_family_ticket_same_event(db):
+    # 環境変数書き換え
+    # テスト実行後に変数は元の値に戻してくれるみたい
+    settings.family_ticket_sell_starts = (
+        datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=-1)
+    ).isoformat()
+
+    # 団体作成
+    group1 = models.Group(**factories.group1.dict())
+    db.add(group1)
+    db.commit()
+    db.refresh(group1)
+
+    # 公演作成
+    event_create = schemas.EventCreate(
+        eventname="テスト公演",
+        target="everyone",
+        ticket_stock=20,
+        starts_at=datetime.now(timezone(timedelta(hours=+10)))
+        + timedelta(days=2),  # 優先券以外では取得不可の時間設定
+        ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=3),
+        sell_starts=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(days=+1, hours=+0),
+        sell_ends=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(days=+1, hours=+1),
+    )
+    event = crud.create_event(db, group1.id, event_create)
+
+    response_1 = client.post(
+        f"/groups/{group1.id}/events/{event.id}/tickets/family",
+        headers=factories.authheader(factories.valid_parent_user_28r),
+    )
+
+    response_2 = client.post(
+        f"/groups/{group1.id}/events/{event.id}/tickets/family",
+        headers=factories.authheader(factories.valid_parent_user_28r),
+    )
+
+    assert response_1.status_code == 200
+    assert response_2.status_code == 200
+
+
 def test_create_family_ticket_wrong_time(db):
     # 環境変数書き換え
     # テスト実行後に変数は元の値に戻してくれるみたい
