@@ -391,7 +391,7 @@ def test_get_user_votable(db):
         id=ulid.new().str,
         group_id=group1.id,
         event_id=group1_event.id,
-        owner_id=factories.valid_guest_user["oid"],
+        owner_id=factories.valid_student_user["oid"],
         person=1,
         status="active",
         is_family_ticket=False,
@@ -408,7 +408,7 @@ def test_get_user_votable(db):
         id=ulid.new().str,
         group_id=group2.id,
         event_id=group2_event.id,
-        owner_id=factories.valid_guest_user["oid"],
+        owner_id=factories.valid_student_user["oid"],
         person=1,
         status="used",
         is_family_ticket=False,
@@ -422,13 +422,13 @@ def test_get_user_votable(db):
 
     assert (
         crud.get_user_votable(
-            db, schemas.JWTUser(**factories.valid_guest_user), group1.id
+            db, schemas.JWTUser(**factories.valid_student_user), group1.id
         )
         == True
     )
     assert (
         crud.get_user_votable(
-            db, schemas.JWTUser(**factories.valid_guest_user), group2.id
+            db, schemas.JWTUser(**factories.valid_student_user), group2.id
         )
         == True
     )
@@ -475,7 +475,7 @@ def test_get_user_vote_count(db):
         id=ulid.new().str,
         group_id=group1.id,
         event_id=group1_event.id,
-        owner_id=factories.valid_guest_user["oid"],
+        owner_id=factories.valid_student_user["oid"],
         person=1,
         status="active",
         is_family_ticket=False,
@@ -492,7 +492,7 @@ def test_get_user_vote_count(db):
         id=ulid.new().str,
         group_id=group2.id,
         event_id=group2_event.id,
-        owner_id=factories.valid_guest_user["oid"],
+        owner_id=factories.valid_student_user["oid"],
         person=1,
         status="used",
         is_family_ticket=False,
@@ -504,7 +504,7 @@ def test_get_user_vote_count(db):
     db.commit()
     db.refresh(ticket_2)
 
-    crud.create_vote(db, group1.id, schemas.JWTUser(**factories.valid_guest_user))
-    crud.create_vote(db, group2.id, schemas.JWTUser(**factories.valid_guest_user))
+    crud.create_vote(db, group1.id, schemas.JWTUser(**factories.valid_student_user))
+    crud.create_vote(db, group2.id, schemas.JWTUser(**factories.valid_student_user))
 
-    assert crud.get_user_vote_count(db, schemas.JWTUser(**factories.valid_guest_user))
+    assert crud.get_user_vote_count(db, schemas.JWTUser(**factories.valid_student_user))
