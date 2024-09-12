@@ -395,6 +395,47 @@ def test_get_all_active_tickets_of_event(db):
 
 
 ### tickets
+def test_create_ticket_used_qualified(db):
+  
+    # 団体作成
+    group1 = models.Group(**factories.group1.dict())
+    db.add(group1)
+    db.commit()
+    db.refresh(group1)
+
+    # 公演作成
+    event_create = schemas.EventCreate(
+        eventname="テスト公演",
+        target="everyone",
+        ticket_stock=20,
+        starts_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=2),
+        ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=3),
+        sell_starts=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(minutes=-10),
+        sell_ends=datetime.now(timezone(timedelta(hours=+9))) + timedelta(minutes=10),
+    )
+    event = crud.create_event(db, group1.id, event_create)
+
+    # activeなチケットを作成
+    ticket_1 = models.Ticket(
+        id=ulid.new().str,
+        group_id=group1.id,
+        event_id=event.id,
+        owner_id=factories.valid_student_user["oid"],
+        person=1,
+        status="used",
+        is_family_ticket=False,
+        created_at=datetime.now(timezone(timedelta(hours=+9))).isoformat(),
+    )
+    db.add(ticket_1)
+    db.commit()
+    db.refresh(ticket_1)
+
+    res = client.post(f"/groups/{group1.id}/events/{event.id}/tickets",params={"person": 1}, headers=factories.authheader(factories.valid_student_user))
+    assert res.json() == {
+        "detail": "既にこの公演・この公演と重複する時間帯の公演の整理券を取得している場合、新たに取得はできません。または取得できる整理券の枚数の上限を超えています"
+    }
+    
 # create ticket for admin
 def test_create_ticket_admin(db):
     # 団体作成
@@ -434,7 +475,6 @@ def test_create_ticket_admin(db):
     assert response_1.status_code == 200
     assert response_2.status_code == 200
     assert response_3.status_code == 404
-
 
 def test_create_family_ticket(db):
     # 環境変数書き換え
