@@ -328,8 +328,47 @@ def test_get_all_active_tickets_of_event(db):
 
 
 ### tickets
-# 優先券取得テスト
-# 時間は正しい場合
+# create ticket for admin
+def test_create_ticket_admin(db):
+    # 団体作成
+    group1 = models.Group(**factories.group1.dict())
+    db.add(group1)
+    db.commit()
+    db.refresh(group1)
+
+    # 公演作成
+    event_create = schemas.EventCreate(
+        eventname="テスト公演",
+        target="everyone",
+        ticket_stock=2,
+        starts_at=datetime.now(timezone(timedelta(hours=+10)))
+        + timedelta(days=2),  # 優先券以外では取得不可の時間設定
+        ends_at=datetime.now(timezone(timedelta(hours=+9))) + timedelta(days=3),
+        sell_starts=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(days=+1, hours=+0),
+        sell_ends=datetime.now(timezone(timedelta(hours=+9)))
+        + timedelta(days=+1, hours=+1),
+    )
+    event = crud.create_event(db, group1.id, event_create)
+
+    response_1 = client.post(
+        f"/groups/{group1.id}/events/{event.id}/tickets/admin",params={"person": 1},
+        headers=factories.authheader(factories.valid_admin_user),
+    )
+    response_2 = client.post(
+        f"/groups/{group1.id}/events/{event.id}/tickets/admin",params={"person": 1},
+        headers=factories.authheader(factories.valid_admin_user),
+    )
+    response_3 = client.post(
+        f"/groups/{group1.id}/events/{event.id}/tickets/admin",
+        params={"person": 1},
+        headers=factories.authheader(factories.valid_admin_user),
+    )
+    assert response_1.status_code == 200
+    assert response_2.status_code == 200
+    assert response_3.status_code == 404
+
+
 def test_create_family_ticket(db):
     # 環境変数書き換え
     # テスト実行後に変数は元の値に戻してくれるみたい
