@@ -408,7 +408,7 @@ def count_tickets_for_event(db: Session, event: schemas.Event) -> int:
         db.query(func.sum(models.Ticket.person).label("person_sum"))
         .filter(
             models.Ticket.event_id == event.id,
-            or_(models.Ticket.status == "active", models.Ticket.status == "paper"),
+            or_(models.Ticket.status == "active", models.Ticket.status == "used"),
         )
         .first()
     )
