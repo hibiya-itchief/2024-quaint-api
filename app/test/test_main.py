@@ -904,20 +904,12 @@ def test_vote(db):
     assert response_7.json() == {"group_id": group1.id, "votes_num": 2}
 
     # student create vote permission error
-    """
     response_8 = client.post(
         url="/votes",
         params={"group_id": group1.id},
         headers=factories.authheader(factories.valid_student_user),
     )
     assert response_8.json() == {"detail": "ゲストまたは保護者である必要があります"}
-    """
-    response_8 = client.post(
-        url="/votes",
-        params={"group_id": group1.id},
-        headers=factories.authheader(factories.valid_student_user),
-    )
-    assert response_8.status_code == 200
 
     response_9 = client.get(
         url=f"/users/me/votes/{group1.id}",
@@ -942,10 +934,7 @@ def test_vote(db):
         headers=factories.authheader(factories.valid_chief_user),
     )
     assert response_12.status_code == 200
-    """
     assert response_12.json() == {"group_id": group1.id, "votes_num": 2}
-    """
-    assert response_12.json() == {"group_id": group1.id, "votes_num": 3}
 
     response_13 = client.get(
         url=f"/votes/{group1.id}",
