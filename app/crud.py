@@ -430,7 +430,7 @@ def check_qualified_for_ticket(
             and_(
                 models.Event.id == models.Ticket.event_id,
                 models.Ticket.owner_id == auth.user_object_id(user),
-                models.Ticket.status == "active",
+                or_(models.Ticket.status == "active", models.Ticket.status == "used"),
             ),
         )
         .all()

@@ -769,6 +769,39 @@ def create_ticket(
 
 
 @app.post(
+    "/groups/{group_id}/events/{event_id}/tickets/admin",
+    response_model=schemas.Ticket,
+    summary="条件を無視して余っていたら整理券を取得",
+    tags=["tickets", "admin"],
+    description="### 必要な権限\nAdmin\n### ログインが必要か\nはい\n### 説明\n整理券が余っているのなら時間・時間の重なりを無視して強制的に整理券を取得",
+)
+def create_ticket_admin(
+    group_id: str,
+    event_id: str,
+    person: int,
+    user: schemas.JWTUser = Depends(auth.admin),
+    db: Session = Depends(db.get_db),
+):
+    event = crud.get_event(db, event_id)
+    if not event:
+        raise HTTPException(404, "指定されたGroupまたはEventが見つかりません")
+    if not auth.check_role(event.target, user):
+        raise HTTPException(
+            HTTP_403_FORBIDDEN, "この公演は整理券を取得できる人が制限されています。"
+        )
+
+    if (
+        crud.count_tickets_for_event(db, event) + person <= event.ticket_stock
+    ):  ##まだチケットが余っていて、同時間帯の公演の整理券取得ではない
+        if 0 < person < 4:  # 1アカウントにつき3人まで入れる
+            return crud.create_ticket(db, event, user, person)
+        else:
+            raise HTTPException(400, "同時入場人数は3人までです")
+    else:
+        raise HTTPException(404, "この公演の整理券は売り切れています")
+
+
+@app.post(
     "/groups/{group_id}/events/{event_id}/tickets/family",
     response_model=schemas.Ticket,
     summary="家族優先券整理券取得",
