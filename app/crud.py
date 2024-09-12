@@ -158,7 +158,7 @@ def count_taken_family_ticket(db: Session, user: schemas.JWTUser) -> int:
         .filter(
             models.Ticket.owner_id == auth.user_object_id(user),
             models.Ticket.is_family_ticket == True,
-            models.Ticket.status == "active",
+            or_(models.Ticket.status == "active", models.Ticket.status == "used"),
         )
         .count()
     )
