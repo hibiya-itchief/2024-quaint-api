@@ -396,7 +396,7 @@ def test_get_all_active_tickets_of_event(db):
 
 ### tickets
 def test_create_ticket_used_qualified(db):
-  
+
     # 団体作成
     group1 = models.Group(**factories.group1.dict())
     db.add(group1)
@@ -431,11 +431,16 @@ def test_create_ticket_used_qualified(db):
     db.commit()
     db.refresh(ticket_1)
 
-    res = client.post(f"/groups/{group1.id}/events/{event.id}/tickets",params={"person": 1}, headers=factories.authheader(factories.valid_student_user))
+    res = client.post(
+        f"/groups/{group1.id}/events/{event.id}/tickets",
+        params={"person": 1},
+        headers=factories.authheader(factories.valid_student_user),
+    )
     assert res.json() == {
         "detail": "既にこの公演・この公演と重複する時間帯の公演の整理券を取得している場合、新たに取得はできません。または取得できる整理券の枚数の上限を超えています"
     }
-    
+
+
 # create ticket for admin
 def test_create_ticket_admin(db):
     # 団体作成
@@ -460,11 +465,13 @@ def test_create_ticket_admin(db):
     event = crud.create_event(db, group1.id, event_create)
 
     response_1 = client.post(
-        f"/groups/{group1.id}/events/{event.id}/tickets/admin",params={"person": 1},
+        f"/groups/{group1.id}/events/{event.id}/tickets/admin",
+        params={"person": 1},
         headers=factories.authheader(factories.valid_admin_user),
     )
     response_2 = client.post(
-        f"/groups/{group1.id}/events/{event.id}/tickets/admin",params={"person": 1},
+        f"/groups/{group1.id}/events/{event.id}/tickets/admin",
+        params={"person": 1},
         headers=factories.authheader(factories.valid_admin_user),
     )
     response_3 = client.post(
@@ -475,6 +482,7 @@ def test_create_ticket_admin(db):
     assert response_1.status_code == 200
     assert response_2.status_code == 200
     assert response_3.status_code == 404
+
 
 def test_create_family_ticket(db):
     # 環境変数書き換え
@@ -1152,6 +1160,23 @@ def test_get_user_votes(db):
         url="/users/me/votes", headers=factories.authheader(factories.valid_guest_user)
     )
     assert response.status_code == 200
+
+
+### news
+def test_create_news(db):
+    response_1 = client.post(
+        f"/news/create",
+        json={"title": "admin", "author": "admin", "detail": "管理者"},
+        headers=factories.authheader(factories.valid_admin_user),
+    )
+    response_2 = client.post(
+        f"/news/create",
+        json={"title": "chief", "author": "chief", "detail": "チーフ会"},
+        headers=factories.authheader(factories.valid_chief_user),
+    )
+
+    assert response_1.status_code == 200
+    assert response_2.status_code == 200
 
 
 # もっと細かく書けるかも(https://nmomos.com/tips/2021/03/07/fastapi-docker-8/#toc_id_2)

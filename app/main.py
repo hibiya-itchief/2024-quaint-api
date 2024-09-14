@@ -1352,10 +1352,12 @@ def get_news(news_id: str, db: Session = Depends(db.get_db)):
 )
 def create_news(
     news: schemas.NewsUpdate,
-    permission_chief: schemas.JWTUser = Depends(auth.chief),
-    permission_admin: schemas.JWTUser = Depends(auth.admin),
+    user: schemas.JWTUser = Depends(auth.get_current_user),
     db: Session = Depends(db.get_db),
 ):
+    if not (auth.check_admin(user) or auth.check_chief(user)):
+        raise HTTPException(HTTP_403_FORBIDDEN, "Adminまたはチーフ会の権限が必要です")
+
     return crud.create_news(db, news)
 
 
@@ -1367,10 +1369,12 @@ def create_news(
 )
 def delete_news(
     news_id: str,
-    permission_chief: schemas.JWTUser = Depends(auth.chief),
-    permission_admin: schemas.JWTUser = Depends(auth.admin),
+    user: schemas.JWTUser = Depends(auth.get_current_user),
     db: Session = Depends(db.get_db),
 ):
+    if not (auth.check_admin(user) or auth.check_chief(user)):
+        raise HTTPException(HTTP_403_FORBIDDEN, "Adminまたはチーフ会の権限が必要です")
+
     return crud.delete_news(db, news_id)
 
 
@@ -1384,8 +1388,10 @@ def delete_news(
 def change_news(
     news_id: str,
     news: schemas.NewsUpdate,
-    permission_chief: schemas.JWTUser = Depends(auth.chief),
-    permission_admin: schemas.JWTUser = Depends(auth.admin),
+    user: schemas.JWTUser = Depends(auth.get_current_user),
     db: Session = Depends(db.get_db),
 ):
+    if not (auth.check_admin(user) or auth.check_chief(user)):
+        raise HTTPException(HTTP_403_FORBIDDEN, "Adminまたはチーフ会の権限が必要です")
+
     return crud.update_news(db, news_id, news)
